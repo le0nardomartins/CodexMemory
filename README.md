@@ -1,58 +1,141 @@
 # CodexMemory
 
-CodexMemory e um servidor MCP local que mantem a memoria do projeto sempre atualizada para o Codex.
-Ele le arquivos de contexto em Markdown, consulta o Ollama para gerar um resumo consolidado, grava `memory_voult/AGENTS.md` e entrega esse conteudo ao Codex via MCP por stdio.
+CodexMemory é um servidor de memória para Codex com 3 modos:
 
-## O Que Ele Faz
+1. `mcp`: expõe memória via MCP (stdio) para o Codex.
+2. `daemon`: atualiza memória automaticamente em loop.
+3. `gui`: interface web para operar daemon, editar contextos e visualizar sinapses entre contextos.
 
-- Inicia um servidor MCP em `main.py`.
-- Carrega `OLLAMA_prompt.md` a cada atualizacao.
-- Le todos os arquivos em `memory_voult/context/*.md`.
-- Solicita ao Ollama um unico resumo consolidado.
-- Reescreve `memory_voult/AGENTS.md` com:
-  - Timestamp na primeira linha no formato `YYYY-MM-DD | HH:MM:SS`
-  - Resumo operacional consolidado
-  - Lista dos arquivos de contexto processados
-- Envia o `AGENTS.md` mais recente ao Codex no `initialize` do MCP, via `instructions`.
+## O Que Este Projeto Faz
 
-## Estrutura Do Projeto
+- Lê `memory_voult/context/context_*.md`.
+- Lê `OLLAMA_PROMPT.md` sem alterar prompts.
+- Consolida memória com Ollama.
+- Reescreve `memory_voult/AGENT_MEMORY.md`.
+- Sempre grava `data | hora` na primeira linha do arquivo de memória.
+- No modo MCP, entrega memória ao Codex em `initialize` e em `resources/read`.
+
+## Stack
+
+- Node.js 18+
+- JavaScript puro (backend e frontend)
+- Sem dependências externas obrigatórias
+
+## Estrutura
 
 ```text
 CodexMemory/
-  main.py
-  OLLAMA_prompt.md
+  server.js
+  package.json
+  OLLAMA_PROMPT.md
+  CODEX_PROMPT_EXAMPLE.md
+  GUI/
+    index.html
+    styles.css
+    app.js
+  scripts/
+    start-daemon.ps1
+    install-autostart.ps1
+    status-autostart.ps1
+    uninstall-autostart.ps1
   memory_voult/
-    AGENTS.md
+    AGENT_MEMORY.md
     context/
-      *.md
+      context_*.md
 ```
 
-## Requisitos
+## Modos De Execução
 
-- Python 3.10+
-- Ollama em execucao local (padrao: `http://127.0.0.1:11434`)
-- Um modelo disponivel no Ollama (padrao: `llama3.1`)
-
-## Configuracao
-
-Variaveis de ambiente:
-
-- `OLLAMA_MODEL` (padrao: `llama3.1`)
-- `OLLAMA_HOST` (padrao: `http://127.0.0.1:11434`)
-- `OLLAMA_TIMEOUT_SEC` (padrao: `120`)
-
-## Execucao
+### 1) MCP (padrão)
 
 ```powershell
-python main.py
+node server.js
 ```
 
-## Recursos MCP
+### 2) Daemon (loop de atualização)
 
-- `memory://agents` -> `AGENTS.md` gerado
-- `memory://context/<relative-path>` -> arquivos de contexto brutos
+```powershell
+node server.js --mode daemon --refresh-sec 300
+```
 
-## Observacoes
+Teste único:
 
-- `AGENTS.md` e conteudo gerado e pode ser recriado a qualquer momento.
-- Se o Ollama estiver indisponivel, o servidor grava um resumo de fallback e continua executando.
+```powershell
+node server.js --mode daemon --once
+```
+
+### 3) GUI (interface web)
+
+```powershell
+node server.js --mode gui --gui-port 4173
+```
+
+Abra: `http://127.0.0.1:4173`
+
+## GUI (Pasta `GUI`)
+
+A interface permite:
+
+- Iniciar, parar e reiniciar daemon.
+- Disparar sync manual.
+- Criar, listar e editar `context_n.md`.
+- Editar `AGENT_MEMORY.md`.
+- Visualizar “void neural”:
+  - cada contexto é uma bolha;
+  - conexões são criadas por NLP simples (keywords + similaridade);
+  - o grafo forma uma rede de “sinapses” entre memórias.
+
+## API Da GUI
+
+- `GET /api/status`
+- `POST /api/sync`
+- `POST /api/daemon/start`
+- `POST /api/daemon/stop`
+- `POST /api/daemon/restart`
+- `GET /api/contexts`
+- `POST /api/contexts`
+- `GET /api/contexts/:name`
+- `PUT /api/contexts/:name`
+- `DELETE /api/contexts/:name`
+- `GET /api/memory`
+- `PUT /api/memory`
+- `GET /api/graph`
+
+## Auto-Start Pronto Para Agendar
+
+Você pediu para deixar pronto para agendar depois, então os scripts já estão preparados:
+
+- `scripts/start-daemon.ps1`: launcher com restart e log.
+- `scripts/install-autostart.ps1`: cria tarefa agendada.
+- `scripts/status-autostart.ps1`: checa status.
+- `scripts/uninstall-autostart.ps1`: remove tarefa.
+
+Quando quiser agendar:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\install-autostart.ps1
+```
+
+## Variáveis De Ambiente
+
+- `OLLAMA_MODEL` (padrão: `llama3.1`)
+- `OLLAMA_HOST` (padrão: `http://127.0.0.1:11434`)
+- `OLLAMA_TIMEOUT_SEC` (padrão: `120`)
+- `DAEMON_REFRESH_SEC` (padrão: `300`)
+- `GUI_HOST` (padrão: `127.0.0.1`)
+- `GUI_PORT` (padrão: `4173`)
+
+## NPM Scripts
+
+```powershell
+npm run mcp
+npm run daemon
+npm run daemon:once
+npm run gui
+```
+
+## Observações
+
+- Os prompts de IA (`OLLAMA_PROMPT.md` e `CODEX_PROMPT_EXAMPLE.md`) não foram alterados.
+- Se Ollama falhar, o sistema gera fallback e mantém operação.
+- Logs do launcher do daemon ficam em `logs/codexmemory-daemon.log`.

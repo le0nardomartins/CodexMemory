@@ -23,6 +23,7 @@ dist/
 *.egg-info/
 .eggs/
 pip-wheel-metadata/
+node_modules/
 
 # Local secrets and env files
 .env
@@ -33,6 +34,7 @@ pip-wheel-metadata/
 *.log
 *.pid
 *.out
+logs/
 
 # IDE and editor files
 .vscode/

@@ -1,0 +1,64 @@
+﻿<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Memória Visual - Codex</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="app">
+      <header class="topbar">
+        <div>
+          <h1>Memória Visual - Codex</h1>
+          <p>modo live</p>
+        </div>
+        <div class="topbar-right">
+          <div id="ollamaBadge" class="ollama-badge loading">
+            <span class="dot"></span>
+            <div class="ollama-meta">
+              <strong id="ollamaText">Verificando Ollama...</strong>
+              <small id="ollamaModel">Modelo: -</small>
+            </div>
+          </div>
+          <div class="actions">
+            <button id="startDaemon">Iniciar</button>
+            <button id="stopDaemon">Parar</button>
+            <button id="restartDaemon">Reiniciar</button>
+            <button id="syncNow">Sync Agora</button>
+          </div>
+        </div>
+      </header>
+
+      <main class="layout">
+        <aside class="panel">
+          <section class="card">
+            <h2>Contexts</h2>
+            <div class="row">
+              <button id="newContext">Novo context_n</button>
+              <button id="refreshContexts">Atualizar Lista</button>
+            </div>
+            <ul id="contextList" class="context-list"></ul>
+          </section>
+
+          <section class="card">
+            <h2>Editor de Contexto</h2>
+            <div class="row">
+              <strong id="currentContext">nenhum selecionado</strong>
+              <button id="saveContext">Salvar</button>
+            </div>
+            <textarea id="contextEditor" placeholder="Conteúdo do contexto..."></textarea>
+          </section>
+        </aside>
+
+        <section class="void-panel">
+          <div class="void-header">
+            <h2>Rede Neural</h2>
+          </div>
+          <canvas id="voidCanvas"></canvas>
+        </section>
+      </main>
+    </div>
+    <script src="./app.js"></script>
+  </body>
+</html>

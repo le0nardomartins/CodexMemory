@@ -1,0 +1,1053 @@
+const fs = require("node:fs");
+const fsp = require("node:fs/promises");
+const path = require("node:path");
+const http = require("node:http");
+const { URL } = require("node:url");
+
+const AGENTS_URI = "memory://agents";
+const SERVER_NAME = "codex-memory-mcp";
+const SERVER_VERSION = "2.0.0-js";
+const DEFAULT_PROTOCOL_VERSION = "2025-03-26";
+const DEFAULT_PROMPT_FILENAME = "OLLAMA_PROMPT.md";
+
+class TerminalUI {
+  constructor() {
+    this.line = "-".repeat(78);
+  }
+
+  nowStamp() {
+    const d = new Date();
+    const pad = (v) => String(v).padStart(2, "0");
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(
+      d.getHours(),
+    )}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+  }
+
+  banner() {
+    this.stderr(this.line);
+    this.stderr(`[${this.nowStamp()}] [BOOT] Inicializando ${SERVER_NAME} (${SERVER_VERSION})`);
+    this.stderr(this.line);
+  }
+
+  stderr(message) {
+    process.stderr.write(`${message}\n`);
+  }
+
+  info(stage, message) {
+    this.stderr(`[${this.nowStamp()}] [${stage.padEnd(10, " ")}] ${message}`);
+  }
+
+  warn(stage, message) {
+    this.info(`${stage} WARN`, message);
+  }
+
+  error(stage, message) {
+    this.info(`${stage} ERROR`, message);
+  }
+}
+
+function formatDateAndTimeLine() {
+  const now = new Date();
+  const pad = (v) => String(v).padStart(2, "0");
+  const date = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+  const time = `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+  return `${date} | ${time}`;
+}
+
+async function ensureDir(dirPath) {
+  await fsp.mkdir(dirPath, { recursive: true });
+}
+
+async function walkMarkdownFiles(baseDir) {
+  const result = [];
+  async function walk(currentDir) {
+    let entries = [];
+    try {
+      entries = await fsp.readdir(currentDir, { withFileTypes: true });
+    } catch {
+      return;
+    }
+    for (const entry of entries) {
+      const abs = path.join(currentDir, entry.name);
+      if (entry.isDirectory()) {
+        await walk(abs);
+      } else if (entry.isFile() && entry.name.toLowerCase().endsWith(".md")) {
+        result.push(abs);
+      }
+    }
+  }
+  await walk(baseDir);
+  result.sort((a, b) => a.localeCompare(b, "en"));
+  return result;
+}
+
+class AgentMemoryCoordinator {
+  constructor(paths, ui, model, ollamaHost, timeoutSec) {
+    this.paths = paths;
+    this.ui = ui;
+    this.model = model;
+    this.timeoutSec = timeoutSec;
+    this.ollamaUrl = `${ollamaHost.replace(/\/+$/, "")}/api/generate`;
+    this.lastMemoryText = "";
+    this.uniqueRole =
+      "Memory curator for CodexMemory: read all context .md files and consolidate a single operational memory in AGENT_MEMORY.md.";
+  }
+
+  async contextPaths() {
+    return walkMarkdownFiles(this.paths.contextDir);
+  }
+
+  async loadPrompt() {
+    const content = (await fsp.readFile(this.paths.promptFile, "utf8")).trim();
+    if (!content) {
+      throw new Error(`${path.basename(this.paths.promptFile)} esta vazio.`);
+    }
+    return content;
+  }
+
+  async loadContextDocs() {
+    const docs = [];
+    const files = await this.contextPaths();
+    for (const abs of files) {
+      const text = (await fsp.readFile(abs, "utf8")).trim();
+      docs.push({
+        absolutePath: abs,
+        relativePath: path.relative(this.paths.root, abs).replace(/\\/g, "/"),
+        text,
+      });
+    }
+    return docs;
+  }
+
+  buildOllamaInput(promptMd, docs) {
+    const parts = [
+      "# Role",
+      this.uniqueRole,
+      "",
+      "# Base Instructions (OLLAMA_PROMPT.md)",
+      promptMd,
+      "",
+      "# Required Task",
+      "- Read all context files below.",
+      "- Produce a single, deduplicated memory summary for AGENT_MEMORY.md.",
+      "- Keep only useful, reusable and current information.",
+      "- Output Markdown only.",
+      "",
+      "# Context Files",
+    ];
+
+    if (docs.length === 0) {
+      parts.push("[NO CONTEXT FILES]");
+    } else {
+      for (const doc of docs) {
+        parts.push(`### ${doc.relativePath}`);
+        parts.push(doc.text || "(empty file)");
+        parts.push("");
+      }
+    }
+    return parts.join("\n").trim();
+  }
+
+  async callOllama(prompt) {
+    const payload = {
+      model: this.model,
+      system: this.uniqueRole,
+      prompt,
+      stream: false,
+      options: { temperature: 0.1 },
+    };
+
+    const response = await fetch(this.ollamaUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+      signal: AbortSignal.timeout(this.timeoutSec * 1000),
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status} ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    const generated = String(data.response || "").trim();
+    if (!generated) {
+      throw new Error("Ollama respondeu sem texto em 'response'.");
+    }
+    return generated;
+  }
+
+  ollamaBaseHost() {
+    return this.ollamaUrl.replace(/\/api\/generate$/, "");
+  }
+
+  async getOllamaStatus() {
+    const host = this.ollamaBaseHost();
+    const configuredModel = this.model;
+    const tagsUrl = `${host}/api/tags`;
+
+    try {
+      const response = await fetch(tagsUrl, {
+        method: "GET",
+        signal: AbortSignal.timeout(Math.max(5, Math.min(this.timeoutSec, 20)) * 1000),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status} ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      const modelNames = Array.isArray(data.models)
+        ? data.models
+            .map((item) => String((item && item.name) || "").trim())
+            .filter(Boolean)
+        : [];
+
+      const needle = configuredModel.toLowerCase();
+      const modelInstalled = modelNames.some((name) => {
+        const n = name.toLowerCase();
+        return n === needle || n.startsWith(`${needle}:`) || needle.startsWith(`${n}:`);
+      });
+
+      return {
+        ok: Boolean(modelInstalled),
+        reachable: true,
+        host,
+        modelConfigured: configuredModel,
+        modelInstalled,
+        models: modelNames.slice(0, 100),
+        checkedAt: new Date().toISOString(),
+        error: null,
+      };
+    } catch (err) {
+      return {
+        ok: false,
+        reachable: false,
+        host,
+        modelConfigured: configuredModel,
+        modelInstalled: false,
+        models: [],
+        checkedAt: new Date().toISOString(),
+        error: String(err),
+      };
+    }
+  }
+
+  fallbackSummary(docs, err) {
+    const lines = [
+      "## Objective",
+      "Consolidate project memory for CodexMemory while Ollama is unavailable.",
+      "",
+      "## Operational Rules",
+      `- Fixed role: ${this.uniqueRole}`,
+      "- Review context files manually until Ollama is available.",
+      "",
+      "## Current State",
+      `- Ollama error: ${String(err)}`,
+    ];
+
+    if (docs.length === 0) {
+      lines.push("- No context files found in memory_voult/context.");
+    } else {
+      lines.push("- Context files found:");
+      for (const doc of docs) {
+        const preview = doc.text ? doc.text.replace(/\s+/g, " ").slice(0, 180) : "(empty file)";
+        lines.push(`  - ${doc.relativePath}: ${preview}`);
+      }
+    }
+
+    lines.push("");
+    lines.push("## Next Actions");
+    lines.push("- Start Ollama service on http://127.0.0.1:11434.");
+    lines.push(`- Ensure model '${this.model}' is installed.`);
+    return lines.join("\n");
+  }
+
+  buildMemoryFile(summary, docs) {
+    const lines = [
+      formatDateAndTimeLine(),
+      "# AGENT MEMORY",
+      "",
+      `Single role: ${this.uniqueRole}`,
+      "",
+      "## Consolidated Summary",
+      summary.trim(),
+      "",
+      "## Processed Context Files",
+    ];
+
+    if (docs.length === 0) {
+      lines.push("- none");
+    } else {
+      for (const doc of docs) {
+        lines.push(`- ${doc.relativePath}`);
+      }
+    }
+    return `${lines.join("\n").trimEnd()}\n`;
+  }
+
+  async refreshMemory(reason, forceOllama = true) {
+    this.ui.info("SYNC", `Atualizando AGENT_MEMORY.md (${reason})`);
+    const promptMd = await this.loadPrompt();
+    const docs = await this.loadContextDocs();
+    this.ui.info(
+      "SYNC",
+      `Prompt carregado (${path.basename(this.paths.promptFile)}) e ${docs.length} arquivo(s) de contexto.`,
+    );
+
+    let summary;
+    if (forceOllama) {
+      const ollamaPrompt = this.buildOllamaInput(promptMd, docs);
+      this.ui.info("OLLAMA", `Chamando modelo '${this.model}' para consolidar memoria.`);
+      try {
+        summary = await this.callOllama(ollamaPrompt);
+        this.ui.info("OLLAMA", "Resumo recebido do Ollama com sucesso.");
+      } catch (err) {
+        this.ui.warn("OLLAMA", `Falha ao consultar Ollama (${String(err)}). Usando fallback local.`);
+        summary = this.fallbackSummary(docs, err);
+      }
+    } else {
+      summary = this.fallbackSummary(docs, new Error("Modo sem consulta ao Ollama."));
+    }
+
+    const memoryText = this.buildMemoryFile(summary, docs);
+    await ensureDir(path.dirname(this.paths.memoryFile));
+    await fsp.writeFile(this.paths.memoryFile, memoryText, "utf8");
+    this.lastMemoryText = memoryText;
+    this.ui.info("SYNC", `AGENT_MEMORY.md atualizado em ${this.paths.memoryFile.replace(/\\/g, "/")}`);
+    return memoryText;
+  }
+
+  async getMemoryText() {
+    if (this.lastMemoryText) return this.lastMemoryText;
+    if (fs.existsSync(this.paths.memoryFile)) {
+      this.lastMemoryText = await fsp.readFile(this.paths.memoryFile, "utf8");
+      return this.lastMemoryText;
+    }
+    return this.refreshMemory("arquivo inexistente");
+  }
+}
+
+class MCPServer {
+  constructor(coordinator, ui) {
+    this.coordinator = coordinator;
+    this.ui = ui;
+    this.clientProtocolVersion = DEFAULT_PROTOCOL_VERSION;
+    this.buffer = Buffer.alloc(0);
+    this.running = true;
+  }
+
+  send(payload) {
+    const encoded = Buffer.from(JSON.stringify(payload), "utf8");
+    const header = Buffer.from(`Content-Length: ${encoded.length}\r\n\r\n`, "ascii");
+    process.stdout.write(header);
+    process.stdout.write(encoded);
+  }
+
+  sendResponse(id, result) {
+    this.send({ jsonrpc: "2.0", id, result });
+  }
+
+  sendError(id, code, message) {
+    this.send({ jsonrpc: "2.0", id, error: { code, message } });
+  }
+
+  sendNotification(method, params = undefined) {
+    const payload = { jsonrpc: "2.0", method };
+    if (params !== undefined) payload.params = params;
+    this.send(payload);
+  }
+
+  tryParseMessages() {
+    while (true) {
+      const headerEnd = this.buffer.indexOf("\r\n\r\n");
+      if (headerEnd < 0) return;
+
+      const headerText = this.buffer.slice(0, headerEnd).toString("ascii");
+      const headers = {};
+      for (const line of headerText.split("\r\n")) {
+        const idx = line.indexOf(":");
+        if (idx < 0) continue;
+        const key = line.slice(0, idx).trim().toLowerCase();
+        const value = line.slice(idx + 1).trim();
+        headers[key] = value;
+      }
+      const length = Number(headers["content-length"] || 0);
+      const messageStart = headerEnd + 4;
+      if (!Number.isFinite(length) || length <= 0) {
+        this.buffer = this.buffer.slice(messageStart);
+        continue;
+      }
+      if (this.buffer.length < messageStart + length) return;
+
+      const body = this.buffer.slice(messageStart, messageStart + length);
+      this.buffer = this.buffer.slice(messageStart + length);
+
+      try {
+        const message = JSON.parse(body.toString("utf8"));
+        void this.dispatch(message);
+      } catch (err) {
+        this.ui.error("MCP", `Falha ao parsear mensagem JSON-RPC: ${String(err)}`);
+      }
+    }
+  }
+
+  async dispatch(message) {
+    if (message && typeof message === "object" && "method" in message && "id" in message) {
+      await this.handleRequest(message);
+      return;
+    }
+    if (message && typeof message === "object" && "method" in message) {
+      this.handleNotification(message);
+    }
+  }
+
+  async handleRequest(message) {
+    const requestId = message.id;
+    const method = String(message.method || "");
+    const params = message.params || {};
+    this.ui.info("MCP", `Request recebido: ${method}`);
+
+    if (method === "initialize") {
+      const protocolVersion = String(params.protocolVersion || DEFAULT_PROTOCOL_VERSION);
+      this.clientProtocolVersion = protocolVersion;
+      const memoryText = await this.coordinator.refreshMemory("conexao do Codex");
+      this.sendResponse(requestId, {
+        protocolVersion,
+        capabilities: { resources: { listChanged: true } },
+        serverInfo: { name: SERVER_NAME, version: SERVER_VERSION },
+        instructions: memoryText,
+      });
+      this.ui.info("MCP", "AGENT_MEMORY.md enviado ao Codex no initialize (instructions).");
+      return;
+    }
+
+    if (method === "ping") {
+      this.sendResponse(requestId, {});
+      return;
+    }
+
+    if (method === "resources/list") {
+      const resources = [
+        {
+          uri: AGENTS_URI,
+          name: "AGENT_MEMORY.md",
+          mimeType: "text/markdown",
+          description: "Memoria consolidada do projeto CodexMemory.",
+        },
+      ];
+      const contextFiles = await this.coordinator.contextPaths();
+      for (const contextFile of contextFiles) {
+        const relative = path.relative(this.coordinator.paths.root, contextFile).replace(/\\/g, "/");
+        resources.push({
+          uri: `memory://context/${relative}`,
+          name: path.basename(contextFile),
+          mimeType: "text/markdown",
+          description: `Arquivo de contexto: ${relative}`,
+        });
+      }
+      this.sendResponse(requestId, { resources });
+      return;
+    }
+
+    if (method === "resources/read") {
+      const uri = String(params.uri || "");
+      if (uri === AGENTS_URI) {
+        const text = await this.coordinator.refreshMemory("resources/read AGENT_MEMORY");
+        this.sendResponse(requestId, {
+          contents: [{ uri: AGENTS_URI, mimeType: "text/markdown", text }],
+        });
+        return;
+      }
+
+      const prefix = "memory://context/";
+      if (uri.startsWith(prefix)) {
+        const rel = uri.slice(prefix.length);
+        const contextAbs = safeResolveInside(this.coordinator.paths.root, rel);
+        if (!fs.existsSync(contextAbs) || !fs.statSync(contextAbs).isFile()) {
+          this.sendError(requestId, -32001, `Contexto nao encontrado: ${rel}`);
+          return;
+        }
+        const text = await fsp.readFile(contextAbs, "utf8");
+        this.sendResponse(requestId, {
+          contents: [{ uri, mimeType: "text/markdown", text }],
+        });
+        return;
+      }
+
+      this.sendError(requestId, -32602, `URI nao suportada: ${uri}`);
+      return;
+    }
+
+    this.sendError(requestId, -32601, `Metodo nao suportado: ${method}`);
+  }
+
+  handleNotification(message) {
+    const method = String(message.method || "");
+    this.ui.info("MCP", `Notification recebida: ${method}`);
+    if (method === "notifications/initialized") {
+      this.ui.info("MCP", "Codex conectado. Publicando memory resource via MCP.");
+      this.sendNotification("notifications/resources/list_changed", {});
+    }
+  }
+
+  serveForever() {
+    this.ui.info("MCP", "Servidor MCP ativo via stdio. Aguardando conexao do Codex.");
+    process.stdin.on("data", (chunk) => {
+      this.buffer = Buffer.concat([this.buffer, chunk]);
+      this.tryParseMessages();
+    });
+    process.stdin.on("end", () => {
+      this.ui.warn("MCP", "Entrada encerrada. Finalizando servidor MCP.");
+      this.running = false;
+    });
+    process.stdin.resume();
+  }
+}
+
+class DaemonRunner {
+  constructor(coordinator, ui, refreshSec) {
+    this.coordinator = coordinator;
+    this.ui = ui;
+    this.refreshSec = Math.max(30, refreshSec);
+    this.running = true;
+  }
+
+  async run(runOnce = false) {
+    this.ui.info("DAEMON", `Modo daemon ativo. Intervalo: ${this.refreshSec}s.`);
+    while (this.running) {
+      try {
+        await this.coordinator.refreshMemory("daemon loop");
+      } catch (err) {
+        this.ui.error("DAEMON", `Falha ao atualizar memoria: ${String(err)}`);
+      }
+
+      if (runOnce) {
+        this.ui.info("DAEMON", "Execucao unica concluida.");
+        return 0;
+      }
+
+      await new Promise((resolve) => setTimeout(resolve, this.refreshSec * 1000));
+    }
+    return 0;
+  }
+}
+
+class GUIController {
+  constructor(coordinator, ui, refreshSec) {
+    this.coordinator = coordinator;
+    this.ui = ui;
+    this.refreshSec = Math.max(30, refreshSec);
+    this.timer = null;
+    this.running = false;
+    this.lastRunAt = null;
+    this.lastError = null;
+  }
+
+  async syncNow(reason = "gui sync") {
+    try {
+      await this.coordinator.refreshMemory(reason);
+      this.lastRunAt = new Date().toISOString();
+      this.lastError = null;
+      return { ok: true };
+    } catch (err) {
+      this.lastError = String(err);
+      return { ok: false, error: String(err) };
+    }
+  }
+
+  async start() {
+    if (this.running) return this.status();
+    this.running = true;
+    await this.syncNow("daemon start");
+    this.timer = setInterval(() => {
+      void this.syncNow("daemon tick");
+    }, this.refreshSec * 1000);
+    this.ui.info("GUI", "Daemon interno iniciado pela GUI.");
+    return this.status();
+  }
+
+  stop() {
+    if (this.timer) {
+      clearInterval(this.timer);
+      this.timer = null;
+    }
+    this.running = false;
+    this.ui.info("GUI", "Daemon interno parado pela GUI.");
+    return this.status();
+  }
+
+  async restart() {
+    this.stop();
+    return this.start();
+  }
+
+  status() {
+    return {
+      running: this.running,
+      refreshSec: this.refreshSec,
+      lastRunAt: this.lastRunAt,
+      lastError: this.lastError,
+    };
+  }
+}
+
+function readBody(req) {
+  return new Promise((resolve, reject) => {
+    const chunks = [];
+    req.on("data", (chunk) => chunks.push(chunk));
+    req.on("end", () => resolve(Buffer.concat(chunks).toString("utf8")));
+    req.on("error", reject);
+  });
+}
+
+function sendJson(res, statusCode, payload) {
+  const body = JSON.stringify(payload);
+  res.writeHead(statusCode, {
+    "Content-Type": "application/json; charset=utf-8",
+    "Content-Length": Buffer.byteLength(body),
+  });
+  res.end(body);
+}
+
+function safeResolveInside(baseDir, userRelativePath) {
+  const resolved = path.resolve(baseDir, userRelativePath);
+  const baseResolved = path.resolve(baseDir);
+  if (resolved === baseResolved || resolved.startsWith(`${baseResolved}${path.sep}`)) {
+    return resolved;
+  }
+  throw new Error("Caminho fora da pasta permitida.");
+}
+
+function sanitizeContextFileName(name) {
+  if (typeof name !== "string") {
+    throw new Error("Nome de arquivo invalido.");
+  }
+  const trimmed = name.trim();
+  if (!/^[a-zA-Z0-9._-]+\.md$/.test(trimmed)) {
+    throw new Error("Nome de arquivo invalido. Use apenas letras, numeros, ., _ e - terminando com .md");
+  }
+  return trimmed;
+}
+
+async function listContexts(paths) {
+  await ensureDir(paths.contextDir);
+  const files = await walkMarkdownFiles(paths.contextDir);
+  const contexts = [];
+  for (const file of files) {
+    const stat = await fsp.stat(file);
+    const text = await fsp.readFile(file, "utf8");
+    contexts.push({
+      name: path.basename(file),
+      relativePath: path.relative(paths.root, file).replace(/\\/g, "/"),
+      size: stat.size,
+      mtime: stat.mtime.toISOString(),
+      preview: text.replace(/\s+/g, " ").slice(0, 160),
+    });
+  }
+  contexts.sort((a, b) => a.name.localeCompare(b.name));
+  return contexts;
+}
+
+async function getNextContextFileName(paths) {
+  const contexts = await listContexts(paths);
+  let maxN = 0;
+  for (const item of contexts) {
+    const match = item.name.match(/^context_(\d+)\.md$/i);
+    if (match) {
+      const n = Number(match[1]);
+      if (Number.isFinite(n) && n > maxN) maxN = n;
+    }
+  }
+  return `context_${maxN + 1}.md`;
+}
+
+function tokenizeForNLP(text) {
+  const stopwords = new Set([
+    "the",
+    "and",
+    "for",
+    "with",
+    "that",
+    "this",
+    "from",
+    "your",
+    "have",
+    "will",
+    "into",
+    "como",
+    "para",
+    "com",
+    "sem",
+    "que",
+    "uma",
+    "das",
+    "dos",
+    "por",
+    "não",
+    "nao",
+    "ele",
+    "ela",
+    "isso",
+    "isso",
+    "quando",
+    "onde",
+    "sobre",
+    "entre",
+  ]);
+
+  const normalized = text
+    .normalize("NFD")
+    .replace(/\p{Diacritic}/gu, "")
+    .toLowerCase();
+  const raw = normalized.match(/[a-z0-9_]{3,}/g) || [];
+  return raw.filter((token) => !stopwords.has(token));
+}
+
+function buildGraphFromContexts(contextItems) {
+  const nodes = contextItems.map((item) => {
+    const tokens = tokenizeForNLP(item.text || "");
+    const freq = new Map();
+    for (const token of tokens) {
+      freq.set(token, (freq.get(token) || 0) + 1);
+    }
+    const keywords = [...freq.entries()]
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 10)
+      .map(([k]) => k);
+    return {
+      id: item.name,
+      label: item.name,
+      relativePath: item.relativePath,
+      tokenCount: tokens.length,
+      keywords,
+      keywordSet: new Set(keywords),
+    };
+  });
+
+  const links = [];
+  for (let i = 0; i < nodes.length; i += 1) {
+    for (let j = i + 1; j < nodes.length; j += 1) {
+      const a = nodes[i];
+      const b = nodes[j];
+      const inter = [...a.keywordSet].filter((k) => b.keywordSet.has(k));
+      const union = new Set([...a.keywordSet, ...b.keywordSet]);
+      const similarity = union.size ? inter.length / union.size : 0;
+      if (inter.length >= 2 || similarity >= 0.22) {
+        links.push({
+          source: a.id,
+          target: b.id,
+          weight: Number(similarity.toFixed(3)),
+          shared: inter.slice(0, 5),
+        });
+      }
+    }
+  }
+
+  return {
+    nodes: nodes.map((n) => ({
+      id: n.id,
+      label: n.label,
+      relativePath: n.relativePath,
+      tokenCount: n.tokenCount,
+      keywords: n.keywords,
+      radius: Math.max(12, Math.min(34, 12 + Math.floor(Math.sqrt(Math.max(1, n.tokenCount))))),
+    })),
+    links,
+  };
+}
+
+function createGUIServer(paths, coordinator, ui, refreshSec, host, port) {
+  const controller = new GUIController(coordinator, ui, refreshSec);
+  const guiRoot = path.join(paths.root, "GUI");
+
+  const mimeByExt = {
+    ".html": "text/html; charset=utf-8",
+    ".css": "text/css; charset=utf-8",
+    ".js": "application/javascript; charset=utf-8",
+    ".json": "application/json; charset=utf-8",
+    ".svg": "image/svg+xml",
+  };
+
+  async function handleApi(req, res, pathname) {
+    if (req.method === "GET" && pathname === "/api/status") {
+      const ollama = await coordinator.getOllamaStatus();
+      return sendJson(res, 200, {
+        daemon: controller.status(),
+        paths: {
+          contextDir: paths.contextDir,
+          memoryFile: paths.memoryFile,
+          promptFile: paths.promptFile,
+        },
+        ollama,
+      });
+    }
+
+    if (req.method === "GET" && pathname === "/api/ollama-status") {
+      const ollama = await coordinator.getOllamaStatus();
+      return sendJson(res, 200, ollama);
+    }
+
+    if (req.method === "POST" && pathname === "/api/sync") {
+      const result = await controller.syncNow("gui manual sync");
+      return sendJson(res, result.ok ? 200 : 500, result);
+    }
+
+    if (req.method === "POST" && pathname === "/api/daemon/start") {
+      const status = await controller.start();
+      return sendJson(res, 200, { ok: true, daemon: status });
+    }
+    if (req.method === "POST" && pathname === "/api/daemon/stop") {
+      const status = controller.stop();
+      return sendJson(res, 200, { ok: true, daemon: status });
+    }
+    if (req.method === "POST" && pathname === "/api/daemon/restart") {
+      const status = await controller.restart();
+      return sendJson(res, 200, { ok: true, daemon: status });
+    }
+
+    if (req.method === "GET" && pathname === "/api/contexts") {
+      const contexts = await listContexts(paths);
+      return sendJson(res, 200, { contexts });
+    }
+
+    if (req.method === "POST" && pathname === "/api/contexts") {
+      const bodyRaw = await readBody(req);
+      const body = bodyRaw ? JSON.parse(bodyRaw) : {};
+      const fileName = body.name ? sanitizeContextFileName(body.name) : await getNextContextFileName(paths);
+      const text = typeof body.text === "string" ? body.text : "";
+      const abs = safeResolveInside(paths.contextDir, fileName);
+      await ensureDir(paths.contextDir);
+      await fsp.writeFile(abs, text, "utf8");
+      const contexts = await listContexts(paths);
+      return sendJson(res, 200, { ok: true, created: fileName, contexts });
+    }
+
+    if (pathname.startsWith("/api/contexts/")) {
+      const encodedName = pathname.slice("/api/contexts/".length);
+      const fileName = sanitizeContextFileName(decodeURIComponent(encodedName));
+      const abs = safeResolveInside(paths.contextDir, fileName);
+
+      if (req.method === "GET") {
+        if (!fs.existsSync(abs)) return sendJson(res, 404, { error: "Context nao encontrado." });
+        const text = await fsp.readFile(abs, "utf8");
+        return sendJson(res, 200, { name: fileName, text });
+      }
+
+      if (req.method === "PUT") {
+        const bodyRaw = await readBody(req);
+        const body = bodyRaw ? JSON.parse(bodyRaw) : {};
+        const text = typeof body.text === "string" ? body.text : "";
+        await ensureDir(paths.contextDir);
+        await fsp.writeFile(abs, text, "utf8");
+        return sendJson(res, 200, { ok: true, updated: fileName });
+      }
+
+      if (req.method === "DELETE") {
+        if (!fs.existsSync(abs)) return sendJson(res, 404, { error: "Context nao encontrado." });
+        await fsp.unlink(abs);
+        return sendJson(res, 200, { ok: true, deleted: fileName });
+      }
+    }
+
+    if (req.method === "GET" && pathname === "/api/memory") {
+      await ensureDir(path.dirname(paths.memoryFile));
+      const text = fs.existsSync(paths.memoryFile) ? await fsp.readFile(paths.memoryFile, "utf8") : "";
+      return sendJson(res, 200, { text });
+    }
+
+    if (req.method === "PUT" && pathname === "/api/memory") {
+      const bodyRaw = await readBody(req);
+      const body = bodyRaw ? JSON.parse(bodyRaw) : {};
+      const text = typeof body.text === "string" ? body.text : "";
+      await ensureDir(path.dirname(paths.memoryFile));
+      await fsp.writeFile(paths.memoryFile, text, "utf8");
+      return sendJson(res, 200, { ok: true });
+    }
+
+    if (req.method === "GET" && pathname === "/api/graph") {
+      const contextFiles = await walkMarkdownFiles(paths.contextDir);
+      const contextItems = [];
+      for (const abs of contextFiles) {
+        const text = await fsp.readFile(abs, "utf8");
+        contextItems.push({
+          name: path.basename(abs),
+          relativePath: path.relative(paths.root, abs).replace(/\\/g, "/"),
+          text,
+        });
+      }
+      return sendJson(res, 200, buildGraphFromContexts(contextItems));
+    }
+
+    sendJson(res, 404, { error: "Endpoint nao encontrado." });
+  }
+
+  const server = http.createServer(async (req, res) => {
+    try {
+      const url = new URL(req.url || "/", `http://${req.headers.host || "127.0.0.1"}`);
+      const pathname = url.pathname;
+
+      if (pathname.startsWith("/api/")) {
+        await handleApi(req, res, pathname);
+        return;
+      }
+
+      let rel = pathname === "/" ? "/index.html" : pathname;
+      rel = rel.replace(/^\/+/, "");
+      const safeAbs = safeResolveInside(guiRoot, rel);
+      if (!fs.existsSync(safeAbs) || !fs.statSync(safeAbs).isFile()) {
+        res.writeHead(404, { "Content-Type": "text/plain; charset=utf-8" });
+        res.end("Not found");
+        return;
+      }
+      const ext = path.extname(safeAbs).toLowerCase();
+      const mime = mimeByExt[ext] || "application/octet-stream";
+      const content = await fsp.readFile(safeAbs);
+      res.writeHead(200, { "Content-Type": mime, "Content-Length": content.length });
+      res.end(content);
+    } catch (err) {
+      sendJson(res, 500, { error: String(err) });
+    }
+  });
+
+  return {
+    listen() {
+      server.listen(port, host, () => {
+        ui.info("GUI", `Interface web ativa em http://${host}:${port}`);
+      });
+    },
+    server,
+    controller,
+  };
+}
+
+function resolvePromptFile(root) {
+  const candidates = [
+    path.join(root, "OLLAMA_PROMPT.md"),
+    path.join(root, "OLLAMA_prompt.md"),
+  ];
+  for (const candidate of candidates) {
+    if (fs.existsSync(candidate)) return candidate;
+  }
+  return path.join(root, DEFAULT_PROMPT_FILENAME);
+}
+
+function buildPaths(root) {
+  return {
+    root,
+    promptFile: resolvePromptFile(root),
+    contextDir: path.join(root, "memory_voult", "context"),
+    memoryFile: path.join(root, "memory_voult", "AGENT_MEMORY.md"),
+  };
+}
+
+function parseArgs(argv) {
+  const parsed = {
+    mode: "mcp",
+    refreshSec: Number(process.env.DAEMON_REFRESH_SEC || 300),
+    once: false,
+    guiHost: process.env.GUI_HOST || "127.0.0.1",
+    guiPort: Number(process.env.GUI_PORT || 4173),
+  };
+
+  for (let i = 0; i < argv.length; i += 1) {
+    const arg = argv[i];
+    if (arg === "--mode" && argv[i + 1]) {
+      parsed.mode = argv[i + 1];
+      i += 1;
+    } else if (arg === "--daemon") {
+      parsed.mode = "daemon";
+    } else if (arg === "--gui") {
+      parsed.mode = "gui";
+    } else if (arg === "--once") {
+      parsed.once = true;
+    } else if (arg === "--refresh-sec" && argv[i + 1]) {
+      parsed.refreshSec = Number(argv[i + 1]);
+      i += 1;
+    } else if (arg === "--gui-host" && argv[i + 1]) {
+      parsed.guiHost = String(argv[i + 1]);
+      i += 1;
+    } else if (arg === "--gui-port" && argv[i + 1]) {
+      parsed.guiPort = Number(argv[i + 1]);
+      i += 1;
+    } else if (arg === "--help" || arg === "-h") {
+      parsed.help = true;
+    }
+  }
+  if (!Number.isFinite(parsed.refreshSec) || parsed.refreshSec <= 0) parsed.refreshSec = 300;
+  if (!Number.isFinite(parsed.guiPort) || parsed.guiPort <= 0) parsed.guiPort = 4173;
+  return parsed;
+}
+
+function printHelp() {
+  const help = [
+    "Uso: node server.js [opcoes]",
+    "",
+    "Opcoes:",
+    "  --mode <mcp|daemon|gui>  Define modo de execucao (padrao: mcp)",
+    "  --daemon                 Atalho para --mode daemon",
+    "  --gui                    Atalho para --mode gui",
+    "  --refresh-sec <n>        Intervalo do daemon em segundos (padrao: 300)",
+    "  --once                   No modo daemon, executa uma vez e encerra",
+    "  --gui-host <host>        Host da GUI (padrao: 127.0.0.1)",
+    "  --gui-port <port>        Porta da GUI (padrao: 4173)",
+    "  -h, --help               Mostra esta ajuda",
+  ];
+  process.stdout.write(`${help.join("\n")}\n`);
+}
+
+async function main() {
+  const args = parseArgs(process.argv.slice(2));
+  if (args.help) {
+    printHelp();
+    return 0;
+  }
+
+  const root = path.resolve(__dirname);
+  const ui = new TerminalUI();
+  ui.banner();
+
+  const mode = String(args.mode || "mcp").toLowerCase();
+  const model = process.env.OLLAMA_MODEL || "llama3.1";
+  const ollamaHost = process.env.OLLAMA_HOST || "http://127.0.0.1:11434";
+  const timeoutSec = Number(process.env.OLLAMA_TIMEOUT_SEC || 120);
+  const safeTimeoutSec = Number.isFinite(timeoutSec) && timeoutSec > 0 ? timeoutSec : 120;
+  const paths = buildPaths(root);
+
+  ui.info("CONFIG", `Prompt: ${paths.promptFile.replace(/\\/g, "/")}`);
+  ui.info("CONFIG", `Contextos: ${paths.contextDir.replace(/\\/g, "/")}`);
+  ui.info("CONFIG", `Memoria: ${paths.memoryFile.replace(/\\/g, "/")}`);
+  ui.info("CONFIG", `Modo: ${mode}`);
+  ui.info("CONFIG", `Ollama: ${ollamaHost} | Modelo: ${model}`);
+
+  const coordinator = new AgentMemoryCoordinator(paths, ui, model, ollamaHost, safeTimeoutSec);
+
+  try {
+    await coordinator.refreshMemory("boot do server");
+  } catch (err) {
+    ui.error("BOOT", `Falha na atualizacao inicial da memoria: ${String(err)}`);
+  }
+
+  if (mode === "daemon") {
+    const daemon = new DaemonRunner(coordinator, ui, args.refreshSec);
+    return daemon.run(Boolean(args.once));
+  }
+
+  if (mode === "gui") {
+    const gui = createGUIServer(paths, coordinator, ui, args.refreshSec, args.guiHost, args.guiPort);
+    gui.listen();
+    return 0;
+  }
+
+  const mcpServer = new MCPServer(coordinator, ui);
+  mcpServer.serveForever();
+  return 0;
+}
+
+main()
+  .then((code) => {
+    if (typeof code === "number" && code !== 0) process.exit(code);
+  })
+  .catch((err) => {
+    process.stderr.write(`[FATAL] ${String(err)}\n`);
+    process.exit(1);
+  });
