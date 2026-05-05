@@ -17,7 +17,7 @@ CodexMemory é um servidor de memória para Codex com 3 modos:
 
 ## Stack
 
-- Node.js 18+
+- Node.js v18+
 - JavaScript puro (backend e frontend)
 - Sem dependências externas obrigatórias
 
@@ -46,13 +46,27 @@ CodexMemory/
 
 ## Modos De Execução
 
-### 1) MCP (padrão)
+### 1) Desktop (Electron, padrão)
 
 ```powershell
-node server.js
+npm start
 ```
 
-### 2) Daemon (loop de atualização)
+Abre o app desktop via Electron. O servidor GUI interno sobe automaticamente no mesmo processo.
+
+### 2) GUI web (opcional)
+
+```powershell
+node server.js --mode gui
+```
+
+### 3) MCP
+
+```powershell
+node server.js --mode mcp
+```
+
+### 4) Daemon (loop de atualização)
 
 ```powershell
 node server.js --mode daemon --refresh-sec 300
@@ -63,14 +77,6 @@ Teste único:
 ```powershell
 node server.js --mode daemon --once
 ```
-
-### 3) GUI (interface web)
-
-```powershell
-node server.js --mode gui --gui-port 4173
-```
-
-Abra: `http://127.0.0.1:4173`
 
 ## GUI (Pasta `GUI`)
 
@@ -118,9 +124,11 @@ powershell -ExecutionPolicy Bypass -File .\scripts\install-autostart.ps1
 
 ## Variáveis De Ambiente
 
-- `OLLAMA_MODEL` (padrão: `llama3.1`)
+- `OLLAMA_MODEL` (padrão: `qwen2.5:3b`)
 - `OLLAMA_HOST` (padrão: `http://127.0.0.1:11434`)
 - `OLLAMA_TIMEOUT_SEC` (padrão: `120`)
+- `OLLAMA_CONTEXT_MAX_CHARS_PER_FILE` (padrão: `3500`)
+- `OLLAMA_CONTEXT_MAX_TOTAL_CHARS` (padrão: `22000`)
 - `DAEMON_REFRESH_SEC` (padrão: `300`)
 - `GUI_HOST` (padrão: `127.0.0.1`)
 - `GUI_PORT` (padrão: `4173`)
@@ -128,6 +136,8 @@ powershell -ExecutionPolicy Bypass -File .\scripts\install-autostart.ps1
 ## NPM Scripts
 
 ```powershell
+npm start
+npm run desktop
 npm run mcp
 npm run daemon
 npm run daemon:once

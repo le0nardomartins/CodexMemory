@@ -281,7 +281,7 @@ function tickSimulation() {
       const dist = Math.sqrt(dist2);
       dx /= dist;
       dy /= dist;
-      const force = 1300 / dist2;
+      const force = 1800 / dist2;
       a.vx -= dx * force;
       a.vy -= dy * force;
       b.vx += dx * force;
@@ -296,8 +296,8 @@ function tickSimulation() {
     const dx = b.x - a.x;
     const dy = b.y - a.y;
     const dist = Math.sqrt(dx * dx + dy * dy) || 1;
-    const target = 120 - Math.min(72, (link.weight || 0) * 220);
-    const spring = (dist - target) * 0.0036;
+    const target = 220 - Math.min(60, (link.weight || 0) * 140);
+    const spring = (dist - target) * 0.0032;
     const ux = dx / dist;
     const uy = dy / dist;
     a.vx += ux * spring;
@@ -365,7 +365,7 @@ function drawSimulation() {
     const b = nodeById.get(link.target);
     if (!a || !b) continue;
     const alpha = Math.min(0.8, 0.1 + (link.weight || 0) * 1.3);
-    ctx.strokeStyle = `rgba(150,210,255,${alpha})`;
+    ctx.strokeStyle = `rgba(255,255,255,${alpha})`;
     ctx.lineWidth = (1 + (link.weight || 0) * 2.2) / camera.zoom;
     ctx.beginPath();
     ctx.moveTo(a.x, a.y);

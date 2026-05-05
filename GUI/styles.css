@@ -229,6 +229,32 @@ textarea {
   resize: none;
 }
 
+/* Scrollbar com trilho transparente e paleta da app */
+*::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+  background: linear-gradient(180deg, rgba(126, 200, 255, 0.65), rgba(157, 247, 229, 0.55));
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, rgba(140, 218, 255, 0.88), rgba(170, 255, 236, 0.72));
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(126, 200, 255, 0.72) transparent;
+}
+
 .void-panel {
   min-height: 0;
   border: 1px solid var(--border);

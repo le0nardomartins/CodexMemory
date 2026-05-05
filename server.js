@@ -9,6 +9,9 @@ const SERVER_NAME = "codex-memory-mcp";
 const SERVER_VERSION = "2.0.0-js";
 const DEFAULT_PROTOCOL_VERSION = "2025-03-26";
 const DEFAULT_PROMPT_FILENAME = "OLLAMA_PROMPT.md";
+const DEFAULT_MODEL = "qwen2.5:3b";
+const DEFAULT_CONTEXT_MAX_CHARS_PER_FILE = 3500;
+const DEFAULT_CONTEXT_MAX_TOTAL_CHARS = 22000;
 
 class TerminalUI {
   constructor() {
@@ -82,11 +85,13 @@ async function walkMarkdownFiles(baseDir) {
 }
 
 class AgentMemoryCoordinator {
-  constructor(paths, ui, model, ollamaHost, timeoutSec) {
+  constructor(paths, ui, model, ollamaHost, timeoutSec, contextMaxPerFile, contextMaxTotal) {
     this.paths = paths;
     this.ui = ui;
     this.model = model;
     this.timeoutSec = timeoutSec;
+    this.contextMaxPerFile = contextMaxPerFile;
+    this.contextMaxTotal = contextMaxTotal;
     this.ollamaUrl = `${ollamaHost.replace(/\/+$/, "")}/api/generate`;
     this.lastMemoryText = "";
     this.uniqueRole =
@@ -106,20 +111,43 @@ class AgentMemoryCoordinator {
   }
 
   async loadContextDocs() {
-    const docs = [];
     const files = await this.contextPaths();
-    for (const abs of files) {
-      const text = (await fsp.readFile(abs, "utf8")).trim();
-      docs.push({
-        absolutePath: abs,
-        relativePath: path.relative(this.paths.root, abs).replace(/\\/g, "/"),
-        text,
-      });
-    }
+    const docs = await Promise.all(
+      files.map(async (abs) => {
+        const text = (await fsp.readFile(abs, "utf8")).trim();
+        return {
+          absolutePath: abs,
+          relativePath: path.relative(this.paths.root, abs).replace(/\\/g, "/"),
+          text,
+        };
+      }),
+    );
     return docs;
   }
 
+  optimizeDocsForPrompt(docs) {
+    let usedTotal = 0;
+    return docs.map((doc) => {
+      const normalized = String(doc.text || "").replace(/\r\n/g, "\n").trim();
+      const remaining = Math.max(0, this.contextMaxTotal - usedTotal);
+      const allowed = Math.max(0, Math.min(this.contextMaxPerFile, remaining));
+      const truncated = normalized.length > allowed;
+      const promptText = allowed > 0 ? normalized.slice(0, allowed) : "";
+      usedTotal += promptText.length;
+      return {
+        absolutePath: doc.absolutePath,
+        relativePath: doc.relativePath,
+        text: doc.text,
+        promptText,
+        originalChars: normalized.length,
+        promptChars: promptText.length,
+        truncated,
+      };
+    });
+  }
+
   buildOllamaInput(promptMd, docs) {
+    const optimizedDocs = this.optimizeDocsForPrompt(docs);
     const parts = [
       "# Role",
       this.uniqueRole,
@@ -136,12 +164,15 @@ class AgentMemoryCoordinator {
       "# Context Files",
     ];
 
-    if (docs.length === 0) {
+    if (optimizedDocs.length === 0) {
       parts.push("[NO CONTEXT FILES]");
     } else {
-      for (const doc of docs) {
-        parts.push(`### ${doc.relativePath}`);
-        parts.push(doc.text || "(empty file)");
+      for (const doc of optimizedDocs) {
+        parts.push(`### ${doc.relativePath} (chars ${doc.promptChars}/${doc.originalChars})`);
+        parts.push(doc.promptText || "(empty file)");
+        if (doc.truncated) {
+          parts.push("... [TRUNCATED FOR PERFORMANCE]");
+        }
         parts.push("");
       }
     }
@@ -703,6 +734,32 @@ function tokenizeForNLP(text) {
   return raw.filter((token) => !stopwords.has(token));
 }
 
+function escapeRegex(text) {
+  return String(text).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function buildContextMentionPatterns(fileName) {
+  const rawName = String(fileName || "").trim().toLowerCase();
+  const noExt = rawName.replace(/\.md$/i, "");
+  const patterns = [];
+
+  if (rawName) {
+    patterns.push(new RegExp(`\\b${escapeRegex(rawName)}\\b`, "i"));
+  }
+  if (noExt) {
+    patterns.push(new RegExp(`\\b${escapeRegex(noExt)}\\b`, "i"));
+    const flexibleSep = escapeRegex(noExt).replace(/[_-]+/g, "[\\\\s_-]*");
+    patterns.push(new RegExp(`\\b${flexibleSep}\\b`, "i"));
+
+    const contextNumber = noExt.match(/^context[_-]?(\d+)$/i);
+    if (contextNumber) {
+      patterns.push(new RegExp(`\\bcontext[\\s_-]*${contextNumber[1]}\\b`, "i"));
+    }
+  }
+
+  return patterns;
+}
+
 function buildGraphFromContexts(contextItems) {
   const nodes = contextItems.map((item) => {
     const tokens = tokenizeForNLP(item.text || "");
@@ -721,6 +778,8 @@ function buildGraphFromContexts(contextItems) {
       tokenCount: tokens.length,
       keywords,
       keywordSet: new Set(keywords),
+      textNorm: String(item.text || "").toLowerCase(),
+      mentionPatterns: buildContextMentionPatterns(item.name),
     };
   });
 
@@ -732,12 +791,21 @@ function buildGraphFromContexts(contextItems) {
       const inter = [...a.keywordSet].filter((k) => b.keywordSet.has(k));
       const union = new Set([...a.keywordSet, ...b.keywordSet]);
       const similarity = union.size ? inter.length / union.size : 0;
-      if (inter.length >= 2 || similarity >= 0.22) {
+      const aMentionsB = b.mentionPatterns.some((rx) => rx.test(a.textNorm));
+      const bMentionsA = a.mentionPatterns.some((rx) => rx.test(b.textNorm));
+      const explicitMention = aMentionsB || bMentionsA;
+
+      if (explicitMention || inter.length >= 2 || similarity >= 0.22) {
+        const weight = explicitMention ? Math.max(0.65, similarity) : similarity;
+        const shared = inter.slice(0, 5);
+        if (explicitMention) {
+          shared.unshift("explicit-reference");
+        }
         links.push({
           source: a.id,
           target: b.id,
-          weight: Number(similarity.toFixed(3)),
-          shared: inter.slice(0, 5),
+          weight: Number(weight.toFixed(3)),
+          shared: shared.slice(0, 5),
         });
       }
     }
@@ -942,7 +1010,7 @@ function buildPaths(root) {
 
 function parseArgs(argv) {
   const parsed = {
-    mode: "mcp",
+    mode: "gui",
     refreshSec: Number(process.env.DAEMON_REFRESH_SEC || 300),
     once: false,
     guiHost: process.env.GUI_HOST || "127.0.0.1",
@@ -983,7 +1051,7 @@ function printHelp() {
     "Uso: node server.js [opcoes]",
     "",
     "Opcoes:",
-    "  --mode <mcp|daemon|gui>  Define modo de execucao (padrao: mcp)",
+    "  --mode <mcp|daemon|gui>  Define modo de execucao (padrao: gui)",
     "  --daemon                 Atalho para --mode daemon",
     "  --gui                    Atalho para --mode gui",
     "  --refresh-sec <n>        Intervalo do daemon em segundos (padrao: 300)",
@@ -1006,11 +1074,25 @@ async function main() {
   const ui = new TerminalUI();
   ui.banner();
 
-  const mode = String(args.mode || "mcp").toLowerCase();
-  const model = process.env.OLLAMA_MODEL || "llama3.1";
+  const mode = String(args.mode || "gui").toLowerCase();
+  const model = process.env.OLLAMA_MODEL || DEFAULT_MODEL;
   const ollamaHost = process.env.OLLAMA_HOST || "http://127.0.0.1:11434";
   const timeoutSec = Number(process.env.OLLAMA_TIMEOUT_SEC || 120);
+  const contextMaxPerFile = Number(
+    process.env.OLLAMA_CONTEXT_MAX_CHARS_PER_FILE || DEFAULT_CONTEXT_MAX_CHARS_PER_FILE,
+  );
+  const contextMaxTotal = Number(
+    process.env.OLLAMA_CONTEXT_MAX_TOTAL_CHARS || DEFAULT_CONTEXT_MAX_TOTAL_CHARS,
+  );
   const safeTimeoutSec = Number.isFinite(timeoutSec) && timeoutSec > 0 ? timeoutSec : 120;
+  const safeContextMaxPerFile =
+    Number.isFinite(contextMaxPerFile) && contextMaxPerFile > 0
+      ? Math.floor(contextMaxPerFile)
+      : DEFAULT_CONTEXT_MAX_CHARS_PER_FILE;
+  const safeContextMaxTotal =
+    Number.isFinite(contextMaxTotal) && contextMaxTotal > 0
+      ? Math.floor(contextMaxTotal)
+      : DEFAULT_CONTEXT_MAX_TOTAL_CHARS;
   const paths = buildPaths(root);
 
   ui.info("CONFIG", `Prompt: ${paths.promptFile.replace(/\\/g, "/")}`);
@@ -1018,8 +1100,20 @@ async function main() {
   ui.info("CONFIG", `Memoria: ${paths.memoryFile.replace(/\\/g, "/")}`);
   ui.info("CONFIG", `Modo: ${mode}`);
   ui.info("CONFIG", `Ollama: ${ollamaHost} | Modelo: ${model}`);
+  ui.info(
+    "CONFIG",
+    `Context prompt limits: per-file=${safeContextMaxPerFile} | total=${safeContextMaxTotal}`,
+  );
 
-  const coordinator = new AgentMemoryCoordinator(paths, ui, model, ollamaHost, safeTimeoutSec);
+  const coordinator = new AgentMemoryCoordinator(
+    paths,
+    ui,
+    model,
+    ollamaHost,
+    safeTimeoutSec,
+    safeContextMaxPerFile,
+    safeContextMaxTotal,
+  );
 
   try {
     await coordinator.refreshMemory("boot do server");
@@ -1035,6 +1129,8 @@ async function main() {
   if (mode === "gui") {
     const gui = createGUIServer(paths, coordinator, ui, args.refreshSec, args.guiHost, args.guiPort);
     gui.listen();
+    // Inicia o daemon automaticamente para que GUI e sync rodem juntos.
+    await gui.controller.start();
     return 0;
   }
 

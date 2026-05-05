@@ -3,9 +3,10 @@
   "version": "2.0.0",
   "private": true,
   "description": "MCP memory server + daemon + GUI for CodexMemory",
-  "main": "server.js",
+  "main": "electron/main.js",
   "scripts": {
-    "start": "node server.js",
+    "start": "electron .",
+    "desktop": "electron .",
     "mcp": "node server.js --mode mcp",
     "daemon": "node server.js --mode daemon",
     "daemon:once": "node server.js --mode daemon --once",
@@ -13,5 +14,8 @@
   },
   "engines": {
     "node": ">=18"
+  },
+  "devDependencies": {
+    "electron": "^41.5.0"
   }
 }
