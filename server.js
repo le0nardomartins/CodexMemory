@@ -4,10 +4,8 @@ const path = require("node:path");
 const http = require("node:http");
 const { URL } = require("node:url");
 
-const AGENTS_URI = "memory://agents";
-const SERVER_NAME = "codex-memory-mcp";
+const SERVER_NAME = "codex-memory-server";
 const SERVER_VERSION = "2.0.0-js";
-const DEFAULT_PROTOCOL_VERSION = "2025-03-26";
 const DEFAULT_PROMPT_FILENAME = "OLLAMA_PROMPT.md";
 const DEFAULT_MODEL = "qwen2.5:3b";
 const DEFAULT_CONTEXT_MAX_CHARS_PER_FILE = 3500;
@@ -355,183 +353,6 @@ class AgentMemoryCoordinator {
       return this.lastMemoryText;
     }
     return this.refreshMemory("arquivo inexistente");
-  }
-}
-
-class MCPServer {
-  constructor(coordinator, ui) {
-    this.coordinator = coordinator;
-    this.ui = ui;
-    this.clientProtocolVersion = DEFAULT_PROTOCOL_VERSION;
-    this.buffer = Buffer.alloc(0);
-    this.running = true;
-  }
-
-  send(payload) {
-    const encoded = Buffer.from(JSON.stringify(payload), "utf8");
-    const header = Buffer.from(`Content-Length: ${encoded.length}\r\n\r\n`, "ascii");
-    process.stdout.write(header);
-    process.stdout.write(encoded);
-  }
-
-  sendResponse(id, result) {
-    this.send({ jsonrpc: "2.0", id, result });
-  }
-
-  sendError(id, code, message) {
-    this.send({ jsonrpc: "2.0", id, error: { code, message } });
-  }
-
-  sendNotification(method, params = undefined) {
-    const payload = { jsonrpc: "2.0", method };
-    if (params !== undefined) payload.params = params;
-    this.send(payload);
-  }
-
-  tryParseMessages() {
-    while (true) {
-      const headerEnd = this.buffer.indexOf("\r\n\r\n");
-      if (headerEnd < 0) return;
-
-      const headerText = this.buffer.slice(0, headerEnd).toString("ascii");
-      const headers = {};
-      for (const line of headerText.split("\r\n")) {
-        const idx = line.indexOf(":");
-        if (idx < 0) continue;
-        const key = line.slice(0, idx).trim().toLowerCase();
-        const value = line.slice(idx + 1).trim();
-        headers[key] = value;
-      }
-      const length = Number(headers["content-length"] || 0);
-      const messageStart = headerEnd + 4;
-      if (!Number.isFinite(length) || length <= 0) {
-        this.buffer = this.buffer.slice(messageStart);
-        continue;
-      }
-      if (this.buffer.length < messageStart + length) return;
-
-      const body = this.buffer.slice(messageStart, messageStart + length);
-      this.buffer = this.buffer.slice(messageStart + length);
-
-      try {
-        const message = JSON.parse(body.toString("utf8"));
-        void this.dispatch(message);
-      } catch (err) {
-        this.ui.error("MCP", `Falha ao parsear mensagem JSON-RPC: ${String(err)}`);
-      }
-    }
-  }
-
-  async dispatch(message) {
-    if (message && typeof message === "object" && "method" in message && "id" in message) {
-      await this.handleRequest(message);
-      return;
-    }
-    if (message && typeof message === "object" && "method" in message) {
-      this.handleNotification(message);
-    }
-  }
-
-  async handleRequest(message) {
-    const requestId = message.id;
-    const method = String(message.method || "");
-    const params = message.params || {};
-    this.ui.info("MCP", `Request recebido: ${method}`);
-
-    if (method === "initialize") {
-      const protocolVersion = String(params.protocolVersion || DEFAULT_PROTOCOL_VERSION);
-      this.clientProtocolVersion = protocolVersion;
-      const memoryText = await this.coordinator.refreshMemory("conexao do Codex");
-      this.sendResponse(requestId, {
-        protocolVersion,
-        capabilities: { resources: { listChanged: true } },
-        serverInfo: { name: SERVER_NAME, version: SERVER_VERSION },
-        instructions: memoryText,
-      });
-      this.ui.info("MCP", "AGENT_MEMORY.md enviado ao Codex no initialize (instructions).");
-      return;
-    }
-
-    if (method === "ping") {
-      this.sendResponse(requestId, {});
-      return;
-    }
-
-    if (method === "resources/list") {
-      const resources = [
-        {
-          uri: AGENTS_URI,
-          name: "AGENT_MEMORY.md",
-          mimeType: "text/markdown",
-          description: "Memoria consolidada do projeto CodexMemory.",
-        },
-      ];
-      const contextFiles = await this.coordinator.contextPaths();
-      for (const contextFile of contextFiles) {
-        const relative = path.relative(this.coordinator.paths.root, contextFile).replace(/\\/g, "/");
-        resources.push({
-          uri: `memory://context/${relative}`,
-          name: path.basename(contextFile),
-          mimeType: "text/markdown",
-          description: `Arquivo de contexto: ${relative}`,
-        });
-      }
-      this.sendResponse(requestId, { resources });
-      return;
-    }
-
-    if (method === "resources/read") {
-      const uri = String(params.uri || "");
-      if (uri === AGENTS_URI) {
-        const text = await this.coordinator.refreshMemory("resources/read AGENT_MEMORY");
-        this.sendResponse(requestId, {
-          contents: [{ uri: AGENTS_URI, mimeType: "text/markdown", text }],
-        });
-        return;
-      }
-
-      const prefix = "memory://context/";
-      if (uri.startsWith(prefix)) {
-        const rel = uri.slice(prefix.length);
-        const contextAbs = safeResolveInside(this.coordinator.paths.root, rel);
-        if (!fs.existsSync(contextAbs) || !fs.statSync(contextAbs).isFile()) {
-          this.sendError(requestId, -32001, `Contexto nao encontrado: ${rel}`);
-          return;
-        }
-        const text = await fsp.readFile(contextAbs, "utf8");
-        this.sendResponse(requestId, {
-          contents: [{ uri, mimeType: "text/markdown", text }],
-        });
-        return;
-      }
-
-      this.sendError(requestId, -32602, `URI nao suportada: ${uri}`);
-      return;
-    }
-
-    this.sendError(requestId, -32601, `Metodo nao suportado: ${method}`);
-  }
-
-  handleNotification(message) {
-    const method = String(message.method || "");
-    this.ui.info("MCP", `Notification recebida: ${method}`);
-    if (method === "notifications/initialized") {
-      this.ui.info("MCP", "Codex conectado. Publicando memory resource via MCP.");
-      this.sendNotification("notifications/resources/list_changed", {});
-    }
-  }
-
-  serveForever() {
-    this.ui.info("MCP", "Servidor MCP ativo via stdio. Aguardando conexao do Codex.");
-    process.stdin.on("data", (chunk) => {
-      this.buffer = Buffer.concat([this.buffer, chunk]);
-      this.tryParseMessages();
-    });
-    process.stdin.on("end", () => {
-      this.ui.warn("MCP", "Entrada encerrada. Finalizando servidor MCP.");
-      this.running = false;
-    });
-    process.stdin.resume();
   }
 }
 
@@ -1041,6 +862,10 @@ function parseArgs(argv) {
       parsed.help = true;
     }
   }
+  const supportedModes = new Set(["gui", "daemon"]);
+  if (!supportedModes.has(String(parsed.mode || "").toLowerCase())) {
+    parsed.mode = "gui";
+  }
   if (!Number.isFinite(parsed.refreshSec) || parsed.refreshSec <= 0) parsed.refreshSec = 300;
   if (!Number.isFinite(parsed.guiPort) || parsed.guiPort <= 0) parsed.guiPort = 4173;
   return parsed;
@@ -1051,7 +876,7 @@ function printHelp() {
     "Uso: node server.js [opcoes]",
     "",
     "Opcoes:",
-    "  --mode <mcp|daemon|gui>  Define modo de execucao (padrao: gui)",
+    "  --mode <daemon|gui>      Define modo de execucao (padrao: gui)",
     "  --daemon                 Atalho para --mode daemon",
     "  --gui                    Atalho para --mode gui",
     "  --refresh-sec <n>        Intervalo do daemon em segundos (padrao: 300)",
@@ -1134,8 +959,10 @@ async function main() {
     return 0;
   }
 
-  const mcpServer = new MCPServer(coordinator, ui);
-  mcpServer.serveForever();
+  ui.warn("CONFIG", `Modo '${mode}' nao suportado. Iniciando GUI.`);
+  const gui = createGUIServer(paths, coordinator, ui, args.refreshSec, args.guiHost, args.guiPort);
+  gui.listen();
+  await gui.controller.start();
   return 0;
 }
 

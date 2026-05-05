@@ -1,10 +1,9 @@
 # CodexMemory
 
-CodexMemory é um servidor de memória para Codex com 3 modos:
+CodexMemory é um servidor de memória para Codex com 2 modos:
 
-1. `mcp`: expõe memória via MCP (stdio) para o Codex.
-2. `daemon`: atualiza memória automaticamente em loop.
-3. `gui`: interface web para operar daemon, editar contextos e visualizar sinapses entre contextos.
+1. `daemon`: atualiza memória automaticamente em loop.
+2. `gui`: interface web para operar daemon, editar contextos e visualizar sinapses entre contextos.
 
 ## O Que Este Projeto Faz
 
@@ -13,7 +12,7 @@ CodexMemory é um servidor de memória para Codex com 3 modos:
 - Consolida memória com Ollama.
 - Reescreve `memory_voult/AGENT_MEMORY.md`.
 - Sempre grava `data | hora` na primeira linha do arquivo de memória.
-- No modo MCP, entrega memória ao Codex em `initialize` e em `resources/read`.
+- No modo GUI, disponibiliza API local para leitura/edição de memória e contextos.
 
 ## Stack
 
@@ -60,13 +59,7 @@ Abre o app desktop via Electron. O servidor GUI interno sobe automaticamente no 
 node server.js --mode gui
 ```
 
-### 3) MCP
-
-```powershell
-node server.js --mode mcp
-```
-
-### 4) Daemon (loop de atualização)
+### 3) Daemon (loop de atualização)
 
 ```powershell
 node server.js --mode daemon --refresh-sec 300
@@ -138,7 +131,6 @@ powershell -ExecutionPolicy Bypass -File .\scripts\install-autostart.ps1
 ```powershell
 npm start
 npm run desktop
-npm run mcp
 npm run daemon
 npm run daemon:once
 npm run gui
