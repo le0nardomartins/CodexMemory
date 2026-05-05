@@ -144,19 +144,36 @@ class AgentMemoryCoordinator {
     });
   }
 
-  buildOllamaInput(promptMd, docs) {
+  buildSystemPrompt(promptMd) {
+    return [
+      "# System Prompt Principal",
+      promptMd,
+      "",
+      "# Regra de Execucao",
+      "- As instrucoes acima sao obrigatorias e tem prioridade maxima.",
+      "- Nao ignore, relaxe ou substitua essas regras.",
+      `- Papel fixo adicional: ${this.uniqueRole}`,
+      "- Always write the final output in English.",
+      "- Never output placeholders like '- ...'.",
+      "- Never mention your role, agent identity, system prompt, or implementation details in the final memory.",
+      "- Assume Codex will NOT read context files directly; AGENT_MEMORY must contain the key facts Codex needs.",
+    ]
+      .join("\n")
+      .trim();
+  }
+
+  buildOllamaInput(docs) {
     const optimizedDocs = this.optimizeDocsForPrompt(docs);
     const parts = [
       "# Role",
       this.uniqueRole,
       "",
-      "# Base Instructions (OLLAMA_PROMPT.md)",
-      promptMd,
-      "",
       "# Required Task",
       "- Read all context files below.",
       "- Produce a single, deduplicated memory summary for AGENT_MEMORY.md.",
+      "- Codex will read AGENT_MEMORY, not the context files. Include the key context facts explicitly.",
       "- Keep only useful, reusable and current information.",
+      "- Convert relevant context details into direct, actionable bullets in the target sections.",
       "- Output Markdown only.",
       "",
       "# Context Files",
@@ -177,10 +194,10 @@ class AgentMemoryCoordinator {
     return parts.join("\n").trim();
   }
 
-  async callOllama(prompt) {
+  async callOllama(systemPrompt, prompt) {
     const payload = {
       model: this.model,
-      system: this.uniqueRole,
+      system: systemPrompt,
       prompt,
       stream: false,
       options: { temperature: 0.1 },
@@ -291,18 +308,117 @@ class AgentMemoryCoordinator {
     return lines.join("\n");
   }
 
-  buildMemoryFile(summary, docs) {
-    const lines = [
+  cleanSummaryText(summary) {
+    let text = String(summary || "").replace(/\r\n/g, "\n").trim();
+    text = text.replace(/^```[a-zA-Z]*\n?/, "").replace(/\n?```$/, "").trim();
+    text = text.replace(/^#\s*AGENT MEMORY\s*$/im, "").trim();
+    text = text.replace(/^##\s*Consolidated Summary\s*$/im, "").trim();
+    text = text.replace(/^##\s*ARCHITURE DECISIONS\s*$/gim, "## ARCHITECTURE DECISIONS");
+    text = text.replace(/^\s*-\s*\.\.\.\s*$/gim, "");
+    text = text.replace(/^single role:.*$/gim, "");
+    text = text.replace(/^.*memory curator for codexmemory.*$/gim, "");
+    const forbiddenLinePatterns = [
+      /instru[cç][oõ]es acima s[aã]o obrigat[oó]rias/i,
+      /n[aã]o ignore,\s*relaxe ou substitua/i,
+      /sempre escreva (o )?output final em ingl[eê]s/i,
+      /never write placeholders/i,
+      /never output placeholders/i,
+      /nunca escreva placeholders/i,
+      /nunca mencione seu papel/i,
+      /never mention your role/i,
+      /codex (will|does) not read context/i,
+      /codex n[aã]o l[eê] os arquivos de contexto/i,
+      /system prompt/i,
+      /agent identity/i,
+      /detalhes de implementa[cç][aã]o/i,
+    ];
+    text = text
+      .split("\n")
+      .filter((line) => {
+        const normalized = String(line || "").trim();
+        return !forbiddenLinePatterns.some((rx) => rx.test(normalized));
+      })
+      .join("\n");
+    return text.trim();
+  }
+
+  defaultSectionLines(title, docs) {
+    if (title === "IMPORTANT CONTEXTS" && docs.length) {
+      return docs.map((doc) => {
+        const preview = String(doc.text || "").replace(/\s+/g, " ").trim();
+        const shortPreview = preview ? preview.slice(0, 180) : "No content available.";
+        return `- ${doc.relativePath}: ${shortPreview}`;
+      });
+    }
+    return [`- No explicit ${title.toLowerCase()} details found in current context files.`];
+  }
+
+  enforceSummaryTemplate(summary, docs) {
+    const required = [
+      "USER PREFERENCES",
+      "SYSTEM RULES",
+      "ARCHITECTURE DECISIONS",
+      "CONSTRAINTS",
+      "PATTERNS",
+      "IMPORTANT CONTEXTS",
+      "NOTES",
+    ];
+
+    const lines = this.cleanSummaryText(summary).split("\n");
+    const sections = new Map();
+    let current = null;
+    for (const rawLine of lines) {
+      const line = rawLine.trimEnd();
+      const match = line.match(/^##\s+(.+?)\s*$/);
+      if (match) {
+        current = match[1].trim().toUpperCase();
+        if (!sections.has(current)) sections.set(current, []);
+      } else if (current) {
+        sections.get(current).push(line);
+      }
+    }
+
+    const out = [];
+    for (const title of required) {
+      const block = (sections.get(title) || [])
+        .map((line) => line.trim())
+        .filter((line) => line && line !== "- ...");
+      out.push(`## ${title}`);
+      if (block.length) {
+        out.push(...block);
+      } else {
+        out.push(...this.defaultSectionLines(title, docs));
+      }
+      out.push("");
+    }
+    return out.join("\n").trim();
+  }
+
+  resolveMemoryHeader(previousMemoryText) {
+    const marker = "## Consolidated Summary";
+    const normalized = String(previousMemoryText || "").replace(/\r\n/g, "\n");
+    const idx = normalized.indexOf(marker);
+    if (idx >= 0) {
+      const beforeMarker = normalized.slice(0, idx);
+      const cleanedBefore = beforeMarker
+        .split("\n")
+        .filter((line) => !/^single role:/i.test(String(line).trim()))
+        .join("\n")
+        .trimEnd();
+      return `${cleanedBefore}\n\n${marker}`;
+    }
+    return [
       formatDateAndTimeLine(),
       "# AGENT MEMORY",
       "",
-      `Single role: ${this.uniqueRole}`,
-      "",
-      "## Consolidated Summary",
-      summary.trim(),
-      "",
-      "## Processed Context Files",
-    ];
+      marker,
+    ].join("\n");
+  }
+
+  buildMemoryFile(summary, docs, previousMemoryText = "") {
+    const normalizedSummary = this.enforceSummaryTemplate(summary, docs);
+    const header = this.resolveMemoryHeader(previousMemoryText);
+    const lines = [header, "", normalizedSummary, "", "## Processed Context Files"];
 
     if (docs.length === 0) {
       lines.push("- none");
@@ -325,10 +441,11 @@ class AgentMemoryCoordinator {
 
     let summary;
     if (forceOllama) {
-      const ollamaPrompt = this.buildOllamaInput(promptMd, docs);
+      const ollamaSystemPrompt = this.buildSystemPrompt(promptMd);
+      const ollamaPrompt = this.buildOllamaInput(docs);
       this.ui.info("OLLAMA", `Chamando modelo '${this.model}' para consolidar memoria.`);
       try {
-        summary = await this.callOllama(ollamaPrompt);
+        summary = await this.callOllama(ollamaSystemPrompt, ollamaPrompt);
         this.ui.info("OLLAMA", "Resumo recebido do Ollama com sucesso.");
       } catch (err) {
         this.ui.warn("OLLAMA", `Falha ao consultar Ollama (${String(err)}). Usando fallback local.`);
@@ -338,7 +455,11 @@ class AgentMemoryCoordinator {
       summary = this.fallbackSummary(docs, new Error("Modo sem consulta ao Ollama."));
     }
 
-    const memoryText = this.buildMemoryFile(summary, docs);
+    let previousMemoryText = "";
+    if (fs.existsSync(this.paths.memoryFile)) {
+      previousMemoryText = await fsp.readFile(this.paths.memoryFile, "utf8");
+    }
+    const memoryText = this.buildMemoryFile(summary, docs, previousMemoryText);
     await ensureDir(path.dirname(this.paths.memoryFile));
     await fsp.writeFile(this.paths.memoryFile, memoryText, "utf8");
     this.lastMemoryText = memoryText;
@@ -678,6 +799,11 @@ function createGUIServer(paths, coordinator, ui, refreshSec, host, port) {
 
     if (req.method === "POST" && pathname === "/api/sync") {
       const result = await controller.syncNow("gui manual sync");
+      return sendJson(res, result.ok ? 200 : 500, result);
+    }
+
+    if (req.method === "POST" && pathname === "/api/memory/force") {
+      const result = await controller.syncNow("gui force agent memory");
       return sendJson(res, result.ok ? 200 : 500, result);
     }
 

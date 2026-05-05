@@ -1,4 +1,4 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="pt-BR">
   <head>
     <meta charset="UTF-8" />
@@ -26,9 +26,14 @@
             <button id="stopDaemon">Parar</button>
             <button id="restartDaemon">Reiniciar</button>
             <button id="syncNow">Sync Agora</button>
+            <button id="forceMemory">Forcar AGENT_MEMORY</button>
           </div>
         </div>
       </header>
+      <section class="status-strip">
+        <div id="daemonBadge" class="daemon-badge down">Daemon: parado</div>
+        <div id="lastAction" class="last-action">Pronto.</div>
+      </section>
 
       <main class="layout">
         <aside class="panel">
@@ -48,6 +53,15 @@
               <button id="saveContext">Salvar</button>
             </div>
             <textarea id="contextEditor" placeholder="Conteúdo do contexto..."></textarea>
+          </section>
+
+          <section class="card">
+            <h2>Agent Memory</h2>
+            <div class="row">
+              <strong>AGENT_MEMORY.md</strong>
+              <button id="refreshMemoryView">Atualizar</button>
+            </div>
+            <textarea id="memoryViewer" readonly placeholder="Carregando memória consolidada..."></textarea>
           </section>
         </aside>
 

@@ -7,10 +7,10 @@ CodexMemory é um servidor de memória para Codex com 2 modos:
 
 ## O Que Este Projeto Faz
 
-- Lê `memory_voult/context/context_*.md`.
+- Lê `C:\Users\leona\Documents\CodexMemory\memory_voult\context\context_*.md`.
 - Lê `OLLAMA_PROMPT.md` sem alterar prompts.
 - Consolida memória com Ollama.
-- Reescreve `memory_voult/AGENT_MEMORY.md`.
+- Reescreve `C:\Users\leona\Documents\CodexMemory\memory_voult\AGENT_MEMORY.md`.
 - Sempre grava `data | hora` na primeira linha do arquivo de memória.
 - No modo GUI, disponibiliza API local para leitura/edição de memória e contextos.
 

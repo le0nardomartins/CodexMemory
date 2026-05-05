@@ -8,10 +8,13 @@ const ui = {
   contextList: document.getElementById("contextList"),
   contextEditor: document.getElementById("contextEditor"),
   currentContext: document.getElementById("currentContext"),
+  memoryViewer: document.getElementById("memoryViewer"),
   canvas: document.getElementById("voidCanvas"),
   ollamaBadge: document.getElementById("ollamaBadge"),
   ollamaText: document.getElementById("ollamaText"),
   ollamaModel: document.getElementById("ollamaModel"),
+  daemonBadge: document.getElementById("daemonBadge"),
+  lastAction: document.getElementById("lastAction"),
 };
 
 const controls = {
@@ -19,9 +22,11 @@ const controls = {
   stopDaemon: document.getElementById("stopDaemon"),
   restartDaemon: document.getElementById("restartDaemon"),
   syncNow: document.getElementById("syncNow"),
+  forceMemory: document.getElementById("forceMemory"),
   newContext: document.getElementById("newContext"),
   refreshContexts: document.getElementById("refreshContexts"),
   saveContext: document.getElementById("saveContext"),
+  refreshMemoryView: document.getElementById("refreshMemoryView"),
 };
 
 const ctx = ui.canvas.getContext("2d");
@@ -41,6 +46,7 @@ const camera = {
 
 let liveRefreshTimer = null;
 let ollamaStatusTimer = null;
+let daemonStatusTimer = null;
 let dpr = window.devicePixelRatio || 1;
 
 function clamp(v, min, max) {
@@ -109,24 +115,92 @@ async function createNewContext() {
 }
 
 async function syncNow() {
-  await api("/api/sync", { method: "POST" });
+  const result = await api("/api/sync", { method: "POST" });
   await loadGraph();
   await loadOllamaStatus();
+  await loadDaemonStatus();
+  await loadMemory();
+  return result;
+}
+
+async function forceMemoryNow() {
+  const result = await api("/api/memory/force", { method: "POST" });
+  await loadGraph();
+  await loadOllamaStatus();
+  await loadDaemonStatus();
+  await loadMemory();
+  return result;
 }
 
 async function daemonStart() {
-  await api("/api/daemon/start", { method: "POST" });
+  const result = await api("/api/daemon/start", { method: "POST" });
   await loadOllamaStatus();
+  await loadDaemonStatus();
+  await loadMemory();
+  return result;
 }
 
 async function daemonStop() {
-  await api("/api/daemon/stop", { method: "POST" });
+  const result = await api("/api/daemon/stop", { method: "POST" });
   await loadOllamaStatus();
+  await loadDaemonStatus();
+  await loadMemory();
+  return result;
 }
 
 async function daemonRestart() {
-  await api("/api/daemon/restart", { method: "POST" });
+  const result = await api("/api/daemon/restart", { method: "POST" });
   await loadOllamaStatus();
+  await loadDaemonStatus();
+  await loadMemory();
+  return result;
+}
+
+async function loadMemory() {
+  if (!ui.memoryViewer) return;
+  try {
+    const data = await api("/api/memory");
+    ui.memoryViewer.value = data.text || "";
+  } catch {
+    ui.memoryViewer.value = "";
+  }
+}
+
+function setActionMessage(message, tone = "") {
+  if (!ui.lastAction) return;
+  ui.lastAction.textContent = message;
+  ui.lastAction.classList.remove("success", "error", "working");
+  if (tone) ui.lastAction.classList.add(tone);
+}
+
+function withButtonBusy(button, busyText) {
+  const originalText = button.textContent;
+  button.disabled = true;
+  button.textContent = busyText;
+  return () => {
+    button.disabled = false;
+    button.textContent = originalText;
+  };
+}
+
+function renderDaemonStatus(status) {
+  if (!ui.daemonBadge) return;
+  const running = Boolean(status && status.running);
+  ui.daemonBadge.classList.toggle("running", running);
+  ui.daemonBadge.classList.toggle("down", !running);
+  const lastRun = status && status.lastRunAt ? new Date(status.lastRunAt).toLocaleTimeString() : "nunca";
+  ui.daemonBadge.textContent = running
+    ? `Daemon: rodando (ultimo sync ${lastRun})`
+    : "Daemon: parado";
+}
+
+async function loadDaemonStatus() {
+  try {
+    const status = await api("/api/status");
+    renderDaemonStatus(status.daemon || null);
+  } catch {
+    renderDaemonStatus(null);
+  }
 }
 
 function renderOllamaStatus(status) {
@@ -464,13 +538,88 @@ function bindCanvasCameraControls() {
 }
 
 function bindEvents() {
-  controls.startDaemon.addEventListener("click", () => daemonStart().catch(alertError));
-  controls.stopDaemon.addEventListener("click", () => daemonStop().catch(alertError));
-  controls.restartDaemon.addEventListener("click", () => daemonRestart().catch(alertError));
-  controls.syncNow.addEventListener("click", () => syncNow().catch(alertError));
+  controls.startDaemon.addEventListener("click", async () => {
+    const done = withButtonBusy(controls.startDaemon, "Iniciando...");
+    setActionMessage("Iniciando daemon...", "working");
+    try {
+      await daemonStart();
+      setActionMessage("Daemon iniciado.", "success");
+    } catch (err) {
+      setActionMessage("Falha ao iniciar daemon.", "error");
+      alertError(err);
+    } finally {
+      done();
+    }
+  });
+
+  controls.stopDaemon.addEventListener("click", async () => {
+    const done = withButtonBusy(controls.stopDaemon, "Parando...");
+    setActionMessage("Parando daemon...", "working");
+    try {
+      await daemonStop();
+      setActionMessage("Daemon parado.", "success");
+    } catch (err) {
+      setActionMessage("Falha ao parar daemon.", "error");
+      alertError(err);
+    } finally {
+      done();
+    }
+  });
+
+  controls.restartDaemon.addEventListener("click", async () => {
+    const done = withButtonBusy(controls.restartDaemon, "Reiniciando...");
+    setActionMessage("Reiniciando daemon...", "working");
+    try {
+      await daemonRestart();
+      setActionMessage("Daemon reiniciado.", "success");
+    } catch (err) {
+      setActionMessage("Falha ao reiniciar daemon.", "error");
+      alertError(err);
+    } finally {
+      done();
+    }
+  });
+
+  controls.syncNow.addEventListener("click", async () => {
+    const done = withButtonBusy(controls.syncNow, "Sincronizando...");
+    setActionMessage("Executando sync manual...", "working");
+    try {
+      const result = await syncNow();
+      if (result && result.ok === false) {
+        setActionMessage("Sync falhou (verifique Ollama).", "error");
+      } else {
+        setActionMessage("Sync concluido.", "success");
+      }
+    } catch (err) {
+      setActionMessage("Falha no sync manual.", "error");
+      alertError(err);
+    } finally {
+      done();
+    }
+  });
+
+  controls.forceMemory.addEventListener("click", async () => {
+    const done = withButtonBusy(controls.forceMemory, "Forcando...");
+    setActionMessage("Forcando criacao do AGENT_MEMORY...", "working");
+    try {
+      const result = await forceMemoryNow();
+      if (result && result.ok === false) {
+        setActionMessage("Falha ao forcar AGENT_MEMORY.", "error");
+      } else {
+        setActionMessage("AGENT_MEMORY recriado com sucesso.", "success");
+      }
+    } catch (err) {
+      setActionMessage("Falha ao forcar AGENT_MEMORY.", "error");
+      alertError(err);
+    } finally {
+      done();
+    }
+  });
+
   controls.newContext.addEventListener("click", () => createNewContext().catch(alertError));
   controls.refreshContexts.addEventListener("click", () => loadContexts().catch(alertError));
   controls.saveContext.addEventListener("click", () => saveSelectedContext().catch(alertError));
+  controls.refreshMemoryView.addEventListener("click", () => loadMemory().catch(alertError));
 
   bindCanvasCameraControls();
 
@@ -490,6 +639,9 @@ async function boot() {
   await loadContexts();
   await loadGraph();
   await loadOllamaStatus();
+  await loadDaemonStatus();
+  await loadMemory();
+  setActionMessage("Pronto.");
 
   if (liveRefreshTimer) clearInterval(liveRefreshTimer);
   liveRefreshTimer = setInterval(() => {
@@ -499,6 +651,12 @@ async function boot() {
   if (ollamaStatusTimer) clearInterval(ollamaStatusTimer);
   ollamaStatusTimer = setInterval(() => {
     void loadOllamaStatus();
+  }, 7000);
+
+  if (daemonStatusTimer) clearInterval(daemonStatusTimer);
+  daemonStatusTimer = setInterval(() => {
+    void loadDaemonStatus();
+    void loadMemory();
   }, 7000);
 
   animate();
