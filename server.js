@@ -702,7 +702,42 @@ function buildContextMentionPatterns(fileName) {
   return patterns;
 }
 
-function buildGraphFromContexts(contextItems) {
+function pairKey(a, b) {
+  return [a, b].sort((x, y) => String(x).localeCompare(String(y))).join("::");
+}
+
+function buildMemoryCoMentionPairs(nodes, memoryText) {
+  const pairs = new Set();
+  const normalized = String(memoryText || "").replace(/\r\n/g, "\n").toLowerCase();
+  if (!normalized.trim()) return pairs;
+
+  // Co-mention is only valid when 2+ contexts are mentioned in the same line.
+  // This prevents "all-to-all" links caused by global file mentions.
+  const lines = normalized
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean);
+
+  for (const line of lines) {
+    const mentioned = [];
+    for (const node of nodes) {
+      if (node.mentionPatterns.some((rx) => rx.test(line))) {
+        mentioned.push(node.id);
+      }
+    }
+    const unique = [...new Set(mentioned)];
+    if (unique.length < 2) continue;
+    for (let i = 0; i < unique.length; i += 1) {
+      for (let j = i + 1; j < unique.length; j += 1) {
+        pairs.add(pairKey(unique[i], unique[j]));
+      }
+    }
+  }
+
+  return pairs;
+}
+
+function buildGraphFromContexts(contextItems, memoryText = "") {
   const nodes = contextItems.map((item) => {
     const tokens = tokenizeForNLP(item.text || "");
     const freq = new Map();
@@ -726,6 +761,7 @@ function buildGraphFromContexts(contextItems) {
   });
 
   const links = [];
+  const memoryPairs = buildMemoryCoMentionPairs(nodes, memoryText);
   for (let i = 0; i < nodes.length; i += 1) {
     for (let j = i + 1; j < nodes.length; j += 1) {
       const a = nodes[i];
@@ -735,13 +771,22 @@ function buildGraphFromContexts(contextItems) {
       const similarity = union.size ? inter.length / union.size : 0;
       const aMentionsB = b.mentionPatterns.some((rx) => rx.test(a.textNorm));
       const bMentionsA = a.mentionPatterns.some((rx) => rx.test(b.textNorm));
-      const explicitMention = aMentionsB || bMentionsA;
+      const explicitMentionInContexts = aMentionsB || bMentionsA;
+      const explicitMentionInMemory = memoryPairs.has(pairKey(a.id, b.id));
+      const explicitMention = explicitMentionInContexts || explicitMentionInMemory;
 
       if (explicitMention || inter.length >= 2 || similarity >= 0.22) {
-        const weight = explicitMention ? Math.max(0.65, similarity) : similarity;
+        const weight = explicitMentionInMemory
+          ? Math.max(0.78, similarity)
+          : explicitMention
+            ? Math.max(0.65, similarity)
+            : similarity;
         const shared = inter.slice(0, 5);
-        if (explicitMention) {
+        if (explicitMentionInContexts) {
           shared.unshift("explicit-reference");
+        }
+        if (explicitMentionInMemory) {
+          shared.unshift("memory-reference");
         }
         links.push({
           source: a.id,
@@ -769,6 +814,7 @@ function buildGraphFromContexts(contextItems) {
 function createGUIServer(paths, coordinator, ui, refreshSec, host, port) {
   const controller = new GUIController(coordinator, ui, refreshSec);
   const guiRoot = path.join(paths.root, "GUI");
+  const languagesRoot = path.join(paths.root, "languages");
 
   const mimeByExt = {
     ".html": "text/html; charset=utf-8",
@@ -890,7 +936,24 @@ function createGUIServer(paths, coordinator, ui, refreshSec, host, port) {
           text,
         });
       }
-      return sendJson(res, 200, buildGraphFromContexts(contextItems));
+      const memoryText = fs.existsSync(paths.memoryFile)
+        ? await fsp.readFile(paths.memoryFile, "utf8")
+        : "";
+      return sendJson(res, 200, buildGraphFromContexts(contextItems, memoryText));
+    }
+
+    if (req.method === "GET" && pathname.startsWith("/languages/")) {
+      const rel = pathname.replace(/^\/languages\//, "");
+      const safeAbs = safeResolveInside(languagesRoot, rel);
+      if (!fs.existsSync(safeAbs) || !fs.statSync(safeAbs).isFile()) {
+        return sendJson(res, 404, { error: "Idioma nao encontrado." });
+      }
+      const content = await fsp.readFile(safeAbs);
+      const ext = path.extname(safeAbs).toLowerCase();
+      const mime = ext === ".json" ? "application/json; charset=utf-8" : "text/plain; charset=utf-8";
+      res.writeHead(200, { "Content-Type": mime, "Content-Length": content.length });
+      res.end(content);
+      return;
     }
 
     sendJson(res, 404, { error: "Endpoint nao encontrado." });

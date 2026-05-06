@@ -2,12 +2,14 @@ const { app, BrowserWindow, dialog, Menu } = require("electron");
 const { spawn } = require("node:child_process");
 const http = require("node:http");
 const path = require("node:path");
+const fs = require("node:fs");
 
 const GUI_HOST = "127.0.0.1";
 const GUI_PORT_START = 4173;
 const GUI_PORT_ATTEMPTS = 20;
 const SERVER_BOOT_TIMEOUT_MS = 180000;
 const SERVER_POLL_INTERVAL_MS = 1000;
+const APP_ICON_PATH = path.resolve(__dirname, "..", "assets", "favicon", "favicon.ico");
 
 let serverProcess = null;
 let mainWindow = null;
@@ -119,6 +121,7 @@ async function startServer() {
 
 async function createWindow() {
   const serverUrl = await startServer();
+  const iconPath = fs.existsSync(APP_ICON_PATH) ? APP_ICON_PATH : undefined;
 
   mainWindow = new BrowserWindow({
     width: 1400,
@@ -128,6 +131,7 @@ async function createWindow() {
     title: "CodexMemory",
     backgroundColor: "#070a14",
     autoHideMenuBar: true,
+    icon: iconPath,
     webPreferences: {
       contextIsolation: true,
       nodeIntegration: false,

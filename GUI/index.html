@@ -3,15 +3,15 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Memória Visual - Codex</title>
+    <title>CodexMemory</title>
     <link rel="stylesheet" href="./styles.css" />
   </head>
   <body>
     <div class="app">
       <header class="topbar">
         <div>
-          <h1>Memória Visual - Codex</h1>
-          <p>modo live</p>
+          <h1 id="appTitle">Memória Visual - Codex</h1>
+          <p id="appMode">modo live</p>
         </div>
         <div class="topbar-right">
           <div id="ollamaBadge" class="ollama-badge loading">
@@ -38,7 +38,7 @@
       <main class="layout">
         <aside class="panel">
           <section class="card">
-            <h2>Contexts</h2>
+            <h2 id="contextsTitle">Contexts</h2>
             <div class="row">
               <button id="newContext">Novo context_n</button>
               <button id="refreshContexts">Atualizar Lista</button>
@@ -47,7 +47,7 @@
           </section>
 
           <section class="card">
-            <h2>Editor de Contexto</h2>
+            <h2 id="contextEditorTitle">Editor de Contexto</h2>
             <div class="row">
               <strong id="currentContext">nenhum selecionado</strong>
               <button id="saveContext">Salvar</button>
@@ -56,9 +56,9 @@
           </section>
 
           <section class="card">
-            <h2>Agent Memory</h2>
+            <h2 id="agentMemoryTitle">Agent Memory</h2>
             <div class="row">
-              <strong>AGENT_MEMORY.md</strong>
+              <strong id="agentMemoryLabel">AGENT_MEMORY.md</strong>
               <button id="refreshMemoryView">Atualizar</button>
             </div>
             <textarea id="memoryViewer" readonly placeholder="Carregando memória consolidada..."></textarea>
@@ -67,9 +67,10 @@
 
         <section class="void-panel">
           <div class="void-header">
-            <h2>Rede Neural</h2>
+            <h2 id="neuralTitle">Rede Neural</h2>
           </div>
           <canvas id="voidCanvas"></canvas>
+          <div id="nodeTooltip" class="node-tooltip" aria-hidden="true"></div>
         </section>
       </main>
     </div>
