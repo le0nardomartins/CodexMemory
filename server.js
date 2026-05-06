@@ -7,9 +7,11 @@ const { URL } = require("node:url");
 const SERVER_NAME = "codex-memory-server";
 const SERVER_VERSION = "2.0.0-js";
 const DEFAULT_PROMPT_FILENAME = "OLLAMA_PROMPT.md";
+const DEFAULT_CODEX_PROMPT_EXAMPLE_FILENAME = "CODEX_PROMPT_EXAMPLE.md";
 const DEFAULT_MODEL = "qwen2.5:3b";
 const DEFAULT_CONTEXT_MAX_CHARS_PER_FILE = 3500;
 const DEFAULT_CONTEXT_MAX_TOTAL_CHARS = 22000;
+const AI_PATHS_CONFIG_RELATIVE = path.join("config", "ai_paths.json");
 
 class TerminalUI {
   constructor() {
@@ -59,6 +61,76 @@ async function ensureDir(dirPath) {
   await fsp.mkdir(dirPath, { recursive: true });
 }
 
+function normalizePathForPrompt(p) {
+  return path.resolve(String(p || "")).replace(/\\/g, "/");
+}
+
+function resolvePathFromRoot(root, rawValue, fallbackRelative) {
+  const raw = String(rawValue || "").trim();
+  if (!raw) {
+    return path.resolve(root, fallbackRelative);
+  }
+  return path.isAbsolute(raw) ? path.resolve(raw) : path.resolve(root, raw);
+}
+
+function renderPromptTokens(text, vars) {
+  return String(text || "").replace(/\{\{\s*([A-Z0-9_]+)\s*\}\}/g, (full, key) => {
+    return Object.prototype.hasOwnProperty.call(vars, key) ? String(vars[key]) : full;
+  });
+}
+
+function buildPromptPathVars(paths) {
+  const baseRoot = paths.baseRootPath || path.dirname(paths.root);
+  const projectFolder = path.basename(paths.root);
+  return {
+    BASE_ROOT_PATH: normalizePathForPrompt(baseRoot),
+    PROJECT_FOLDER_NAME: projectFolder,
+    PROJECT_ROOT_PATH: normalizePathForPrompt(paths.root),
+    OLLAMA_PROMPT_PATH: normalizePathForPrompt(paths.promptFile),
+    CODEX_PROMPT_EXAMPLE_PATH: normalizePathForPrompt(paths.codexPromptExampleFile),
+    AGENT_MEMORY_PATH: normalizePathForPrompt(paths.memoryFile),
+    CONTEXT_DIR_PATH: normalizePathForPrompt(paths.contextDir),
+    CONTEXT_GLOB_PATH: normalizePathForPrompt(path.join(paths.contextDir, "context_*.md")),
+  };
+}
+
+function buildAutoPathsBlock() {
+  return [
+    "<!-- AUTO_PATHS:START -->",
+    "BASE_ROOT_PATH={{BASE_ROOT_PATH}}",
+    "PROJECT_FOLDER_NAME={{PROJECT_FOLDER_NAME}}",
+    "PROJECT_ROOT_PATH={{PROJECT_ROOT_PATH}}",
+    "AGENT_MEMORY_PATH={{AGENT_MEMORY_PATH}}",
+    "CONTEXT_DIR_PATH={{CONTEXT_DIR_PATH}}",
+    "CONTEXT_GLOB_PATH={{CONTEXT_GLOB_PATH}}",
+    "OLLAMA_PROMPT_PATH={{OLLAMA_PROMPT_PATH}}",
+    "CODEX_PROMPT_EXAMPLE_PATH={{CODEX_PROMPT_EXAMPLE_PATH}}",
+    "<!-- AUTO_PATHS:END -->",
+  ].join("\n");
+}
+
+function injectAutoPathsBlock(originalText, renderedBlock) {
+  const source = String(originalText || "");
+  const rx = /<!-- AUTO_PATHS:START -->[\s\S]*?<!-- AUTO_PATHS:END -->/m;
+  if (!rx.test(source)) return source;
+  return source.replace(rx, renderedBlock);
+}
+
+async function syncPromptPathBlocks(paths, ui) {
+  const files = [paths.promptFile, paths.codexPromptExampleFile];
+  const renderedBlock = buildAutoPathsBlock();
+
+  for (const abs of files) {
+    if (!fs.existsSync(abs)) continue;
+    const current = await fsp.readFile(abs, "utf8");
+    const next = injectAutoPathsBlock(current, renderedBlock);
+    if (next !== current) {
+      await fsp.writeFile(abs, next, "utf8");
+      ui.info("CONFIG", `Bloco AUTO_PATHS atualizado em ${normalizePathForPrompt(abs)}`);
+    }
+  }
+}
+
 async function walkMarkdownFiles(baseDir) {
   const result = [];
   async function walk(currentDir) {
@@ -85,6 +157,7 @@ async function walkMarkdownFiles(baseDir) {
 class AgentMemoryCoordinator {
   constructor(paths, ui, model, ollamaHost, timeoutSec, contextMaxPerFile, contextMaxTotal) {
     this.paths = paths;
+    this.promptVars = buildPromptPathVars(paths);
     this.ui = ui;
     this.model = model;
     this.timeoutSec = timeoutSec;
@@ -101,7 +174,8 @@ class AgentMemoryCoordinator {
   }
 
   async loadPrompt() {
-    const content = (await fsp.readFile(this.paths.promptFile, "utf8")).trim();
+    const raw = await fsp.readFile(this.paths.promptFile, "utf8");
+    const content = renderPromptTokens(raw, this.promptVars).trim();
     if (!content) {
       throw new Error(`${path.basename(this.paths.promptFile)} esta vazio.`);
     }
@@ -1009,10 +1083,66 @@ function resolvePromptFile(root) {
   return path.join(root, DEFAULT_PROMPT_FILENAME);
 }
 
+function resolveCodexPromptExampleFile(root) {
+  return path.join(root, DEFAULT_CODEX_PROMPT_EXAMPLE_FILENAME);
+}
+
+async function loadAIPathsConfig(root, ui) {
+  const configFile = path.join(root, AI_PATHS_CONFIG_RELATIVE);
+  const defaultBaseRoot = path.dirname(root);
+  const projectFolderName = path.basename(root);
+  const defaultConfig = {
+    baseRootPath: defaultBaseRoot,
+  };
+
+  await ensureDir(path.dirname(configFile));
+  if (!fs.existsSync(configFile)) {
+    await fsp.writeFile(configFile, `${JSON.stringify(defaultConfig, null, 2)}\n`, "utf8");
+    ui.info("CONFIG", `Arquivo criado: ${normalizePathForPrompt(configFile)}`);
+  }
+
+  let userConfig = {};
+  try {
+    const raw = await fsp.readFile(configFile, "utf8");
+    userConfig = raw.trim() ? JSON.parse(raw) : {};
+  } catch (err) {
+    ui.warn("CONFIG", `Falha ao ler ai_paths.json (${String(err)}). Usando padrao.`);
+  }
+
+  const configBaseRoot =
+    userConfig && typeof userConfig.baseRootPath === "string" && userConfig.baseRootPath.trim()
+      ? path.resolve(userConfig.baseRootPath.trim())
+      : defaultBaseRoot;
+  const configuredProjectRoot = path.resolve(configBaseRoot, projectFolderName);
+  const effectiveProjectRoot = fs.existsSync(configuredProjectRoot) ? configuredProjectRoot : root;
+  if (effectiveProjectRoot !== configuredProjectRoot) {
+    ui.warn(
+      "CONFIG",
+      `Projeto nao encontrado em ${normalizePathForPrompt(configuredProjectRoot)}. Usando raiz atual.`,
+    );
+  }
+
+  const fallbackPromptFile = resolvePromptFile(effectiveProjectRoot);
+  const resolved = {
+    root: effectiveProjectRoot,
+    configFile,
+    baseRootPath: configBaseRoot,
+    promptFile: fallbackPromptFile,
+    codexPromptExampleFile: path.join(effectiveProjectRoot, DEFAULT_CODEX_PROMPT_EXAMPLE_FILENAME),
+    contextDir: path.join(effectiveProjectRoot, "memory_voult", "context"),
+    memoryFile: path.join(effectiveProjectRoot, "memory_voult", "AGENT_MEMORY.md"),
+  };
+
+  resolved.promptVars = buildPromptPathVars(resolved);
+  return resolved;
+}
+
 function buildPaths(root) {
   return {
     root,
     promptFile: resolvePromptFile(root),
+    codexPromptExampleFile: resolveCodexPromptExampleFile(root),
+    configFile: path.join(root, AI_PATHS_CONFIG_RELATIVE),
     contextDir: path.join(root, "memory_voult", "context"),
     memoryFile: path.join(root, "memory_voult", "AGENT_MEMORY.md"),
   };
@@ -1107,9 +1237,15 @@ async function main() {
     Number.isFinite(contextMaxTotal) && contextMaxTotal > 0
       ? Math.floor(contextMaxTotal)
       : DEFAULT_CONTEXT_MAX_TOTAL_CHARS;
-  const paths = buildPaths(root);
+  const paths = await loadAIPathsConfig(root, ui);
+  paths.promptVars = buildPromptPathVars(paths);
+  await syncPromptPathBlocks(paths, ui);
 
   ui.info("CONFIG", `Prompt: ${paths.promptFile.replace(/\\/g, "/")}`);
+  ui.info("CONFIG", `Codex prompt example: ${paths.codexPromptExampleFile.replace(/\\/g, "/")}`);
+  ui.info("CONFIG", `AI paths config: ${paths.configFile.replace(/\\/g, "/")}`);
+  ui.info("CONFIG", `Base root path: ${paths.baseRootPath.replace(/\\/g, "/")}`);
+  ui.info("CONFIG", `Project root: ${paths.root.replace(/\\/g, "/")}`);
   ui.info("CONFIG", `Contextos: ${paths.contextDir.replace(/\\/g, "/")}`);
   ui.info("CONFIG", `Memoria: ${paths.memoryFile.replace(/\\/g, "/")}`);
   ui.info("CONFIG", `Modo: ${mode}`);

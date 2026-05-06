@@ -6,13 +6,10 @@ AGENT_MEMORY.md
 
 MEMORY SYSTEM OVERVIEW:
 All long-term memory is centralized in a single file:
-C:\Users\leona\Documents\CodexMemory\memory_voult\AGENT_MEMORY.md
+{{BASE_ROOT_PATH}}/CodexMemory/memory_voult/AGENT_MEMORY.md
 
 Individual memory entries are stored as:
-C:\Users\leona\Documents\CodexMemory\memory_voult\context\context_1.md
-C:\Users\leona\Documents\CodexMemory\memory_voult\context\context_2.md
-C:\Users\leona\Documents\CodexMemory\memory_voult\context\context_3.md
-...
+{{BASE_ROOT_PATH}}/CodexMemory/memory_voult/context/context_*.md
 
 CRITICAL RULE:
 You MUST NOT read any context_*.md files directly.
@@ -40,10 +37,10 @@ Whenever you identify information that is:
 You MUST persist it.
 
 3. MEMORY WRITE PROCESS:
-- Scan "C:\Users\leona\Documents\CodexMemory\memory_voult\context\" folder
+- Scan "{{BASE_ROOT_PATH}}/CodexMemory/memory_voult/context" folder
 - Identify the highest context number N
 - Create:
-  C:\Users\leona\Documents\CodexMemory\memory_voult\context\context_(N+1).md
+  {{BASE_ROOT_PATH}}/CodexMemory/memory_voult/context/context_(N+1).md
 
 4. MEMORY FORMAT (STRICT):
 

@@ -381,16 +381,20 @@ function screenToWorld(screenX, screenY) {
 
 function initSimulation(graph) {
   const nodeCount = Math.max(1, (graph.nodes || []).length);
-  const targetWorldW = clamp(Math.ceil(Math.sqrt(nodeCount) * 980), 1200, 12000);
-  const targetWorldH = clamp(Math.ceil(Math.sqrt(nodeCount) * 760), 720, 9000);
+  const targetWorldW = clamp(Math.ceil(Math.sqrt(nodeCount) * 640), 820, 7600);
+  const targetWorldH = clamp(Math.ceil(Math.sqrt(nodeCount) * 500), 560, 5600);
   world.width = targetWorldW;
   world.height = targetWorldH;
 
   const byId = new Map(sim.nodes.map((n) => [n.id, n]));
-  const spawnMinX = world.padding;
-  const spawnMaxX = world.width - world.padding;
-  const spawnMinY = world.padding;
-  const spawnMaxY = world.height - world.padding;
+  const centerX = world.width * 0.5;
+  const centerY = world.height * 0.5;
+  const clusterSpreadX = clamp(Math.sqrt(nodeCount) * 120, 180, world.width * 0.36);
+  const clusterSpreadY = clamp(Math.sqrt(nodeCount) * 96, 150, world.height * 0.34);
+  const spawnMinX = clamp(centerX - clusterSpreadX, world.padding, world.width - world.padding);
+  const spawnMaxX = clamp(centerX + clusterSpreadX, world.padding, world.width - world.padding);
+  const spawnMinY = clamp(centerY - clusterSpreadY, world.padding, world.height - world.padding);
+  const spawnMaxY = clamp(centerY + clusterSpreadY, world.padding, world.height - world.padding);
 
   sim.nodes = (graph.nodes || []).map((n) => {
     const existing = byId.get(n.id);
@@ -398,24 +402,24 @@ function initSimulation(graph) {
       return {
         ...existing,
         ...n,
-        x: existing.x,
-        y: existing.y,
+        x: clamp(existing.x, spawnMinX, spawnMaxX),
+        y: clamp(existing.y, spawnMinY, spawnMaxY),
         vx: existing.vx,
         vy: existing.vy,
         phase: existing.phase,
         driftSeed: existing.driftSeed,
-        driftSpeed: existing.driftSpeed,
+        driftSpeed: clamp(existing.driftSpeed || 0.0052, 0.0018, 0.0055),
         colorHue: existing.colorHue,
         glowBias: existing.glowBias,
         wobbleA: existing.wobbleA,
         wobbleB: existing.wobbleB,
         homeX: existing.homeX,
         homeY: existing.homeY,
-        orbitX: existing.orbitX,
-        orbitY: existing.orbitY,
+        orbitX: clamp(existing.orbitX || 11.5, 6, 16),
+        orbitY: clamp(existing.orbitY || 10, 5, 14),
         orbitPhaseX: existing.orbitPhaseX,
         orbitPhaseY: existing.orbitPhaseY,
-        maxOrbitRadius: existing.maxOrbitRadius,
+        maxOrbitRadius: clamp(existing.maxOrbitRadius || 27, 18, 35),
       };
     }
 
@@ -425,22 +429,22 @@ function initSimulation(graph) {
       ...n,
       x,
       y,
-      vx: (Math.random() - 0.5) * 0.6,
-      vy: (Math.random() - 0.5) * 0.6,
+      vx: (Math.random() - 0.5) * 0.08,
+      vy: (Math.random() - 0.5) * 0.08,
       phase: Math.random() * Math.PI * 2,
       driftSeed: Math.random() * Math.PI * 2,
-      driftSpeed: 0.01 + Math.random() * 0.02,
+      driftSpeed: 0.0018 + Math.random() * 0.0037,
       colorHue: 175 + Math.random() * 70,
       glowBias: 0.75 + Math.random() * 0.5,
       wobbleA: 0.6 + Math.random() * 1.5,
       wobbleB: 0.6 + Math.random() * 1.5,
       homeX: x,
       homeY: y,
-      orbitX: 22 + Math.random() * 48,
-      orbitY: 18 + Math.random() * 42,
+      orbitX: 6 + Math.random() * 10,
+      orbitY: 5 + Math.random() * 9,
       orbitPhaseX: Math.random() * Math.PI * 2,
       orbitPhaseY: Math.random() * Math.PI * 2,
-      maxOrbitRadius: 95 + Math.random() * 35,
+      maxOrbitRadius: 18 + Math.random() * 17,
     };
   });
 
@@ -490,7 +494,7 @@ function tickSimulation() {
   if (!sim.nodes.length) return;
   flowTick += 0.018;
 
-  const damping = 0.965;
+  const damping = 0.984;
   const nodeById = new Map(sim.nodes.map((n) => [n.id, n]));
 
   for (const link of sim.links) {
@@ -501,8 +505,8 @@ function tickSimulation() {
     const dy = b.y - a.y;
     const dist = Math.sqrt(dx * dx + dy * dy) || 1;
     const weight = link.weight || 0;
-    const baseTarget = 300 - Math.min(55, weight * 95);
-    const target = clamp(baseTarget, 220, 360);
+    const baseTarget = 230 - Math.min(48, weight * 86);
+    const target = clamp(baseTarget, 145, 260);
     const spring = (dist - target) * 0.0044;
     const ux = dx / dist;
     const uy = dy / dist;
@@ -520,9 +524,9 @@ function tickSimulation() {
       const dx = b.x - a.x;
       const dy = b.y - a.y;
       const dist = Math.sqrt(dx * dx + dy * dy) || 1;
-      const minDist = 85 + (a.radius + b.radius) * 0.6;
+      const minDist = 62 + (a.radius + b.radius) * 0.35;
       if (dist >= minDist) continue;
-      const push = (minDist - dist) * 0.012;
+      const push = (minDist - dist) * 0.009;
       const ux = dx / dist;
       const uy = dy / dist;
       a.vx -= ux * push;
@@ -533,28 +537,32 @@ function tickSimulation() {
   }
 
   for (const node of sim.nodes) {
-    node.phase += node.driftSpeed;
+    const hasRefs = (node.refCount || 0) > 0;
+    const motionFactor = hasRefs ? 1 : 0.35;
+    node.phase += node.driftSpeed * motionFactor;
+    const orbitX = node.orbitX * motionFactor;
+    const orbitY = node.orbitY * motionFactor;
     const targetX =
       node.homeX
-      + Math.cos(node.phase * node.wobbleA + node.orbitPhaseX) * node.orbitX
-      + Math.sin(node.phase * 0.67 + node.driftSeed) * (node.orbitX * 0.25);
+      + Math.cos(node.phase * node.wobbleA + node.orbitPhaseX) * orbitX
+      + Math.sin(node.phase * 0.67 + node.driftSeed) * (orbitX * 0.08);
     const targetY =
       node.homeY
-      + Math.sin(node.phase * node.wobbleB + node.orbitPhaseY) * node.orbitY
-      + Math.cos(node.phase * 0.73 + node.driftSeed) * (node.orbitY * 0.22);
+      + Math.sin(node.phase * node.wobbleB + node.orbitPhaseY) * orbitY
+      + Math.cos(node.phase * 0.73 + node.driftSeed) * (orbitY * 0.07);
 
     // Sempre tende ao alvo orbital, mantendo loop em torno da origem.
-    node.vx += (targetX - node.x) * 0.012;
-    node.vy += (targetY - node.y) * 0.012;
+    node.vx += (targetX - node.x) * (0.0041 * motionFactor);
+    node.vy += (targetY - node.y) * (0.0041 * motionFactor);
 
     node.vx *= damping;
     node.vy *= damping;
 
     const speed = Math.hypot(node.vx, node.vy);
-    if (speed < 0.06) {
+    if (speed < 0.0085 * motionFactor) {
       const a = node.phase + node.driftSeed;
-      node.vx += Math.cos(a) * 0.08;
-      node.vy += Math.sin(a) * 0.08;
+      node.vx += Math.cos(a) * (0.006 * motionFactor);
+      node.vy += Math.sin(a) * (0.006 * motionFactor);
     }
 
     node.x += node.vx;
@@ -609,9 +617,12 @@ function drawSimulation() {
     const a = nodeById.get(link.source);
     const b = nodeById.get(link.target);
     if (!a || !b) continue;
-    const alpha = Math.min(0.72, 0.08 + (link.weight || 0) * 0.9);
+    const weight = clamp(Number(link.weight) || 0, 0, 1.4);
+    const alpha = 0.58;
+    const lineWidthPx = 1.65;
     ctx.strokeStyle = `rgba(255,255,255,${alpha})`;
-    ctx.lineWidth = (0.5 + (link.weight || 0) * 1.1) / camera.zoom;
+    // Mantem espessura minima visivel e maxima controlada na tela.
+    ctx.lineWidth = lineWidthPx / camera.zoom;
     ctx.beginPath();
     ctx.moveTo(a.x, a.y);
     ctx.lineTo(b.x, b.y);

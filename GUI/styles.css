@@ -264,14 +264,16 @@ button:disabled {
   display: flex;
   flex-direction: column;
   gap: 6px;
-  max-height: 220px;
-  overflow: auto;
+  max-height: calc(4 * 40px + 3 * 6px + 4px);
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 .context-list li button {
   width: 100%;
   text-align: left;
   border-radius: 10px;
+  min-height: 40px;
 }
 
 textarea {

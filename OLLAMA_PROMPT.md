@@ -2,10 +2,10 @@ You are a file rewriting agent.
 
 YOUR ONLY JOB:
 Generate the exact final content of:
-C:\Users\leona\Documents\CodexMemory/memory_voult/AGENT_MEMORY.md
+{{BASE_ROOT_PATH}}/CodexMemory/memory_voult/AGENT_MEMORY.md
 
 You must read all files:
-C:\Users\leona\Documents\CodexMemory/memory_voult/context/context_*.md
+{{BASE_ROOT_PATH}}/CodexMemory/memory_voult/context/context_*.md
 
 Then you must replace the ENTIRE content of AGENT_MEMORY.md.
 

@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/logo_name.png" alt="Codex Memory logo" width="360" />
+  <img src="assets/logo_name.png" alt="Codex Memory logo" width="500" />
 </p>
 
 <h1 align="center">Codex Memory</h1>
@@ -47,6 +47,22 @@ Context files are easy to write but hard to keep synchronized over time. Codex M
 
 ```powershell
 npm install
+```
+
+### Configure Paths Before First Run
+
+Before using the project, create `config/ai_paths.json` from `config/ai_paths.json.example` and set the absolute base path to your local parent folder.
+
+```powershell
+copy config\ai_paths.json.example config\ai_paths.json
+```
+
+Then edit `config/ai_paths.json` and update `baseRootPath` to your absolute path, for example:
+
+```json
+{
+  "baseRootPath": "C:/Users/leona/Documents"
+}
 ```
 
 ### Run Desktop

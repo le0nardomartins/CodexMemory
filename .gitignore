@@ -51,4 +51,8 @@ Thumbs.db
 Desktop.ini
 
 # Generated project artifacts
-memory_voult/AGENTS.md
+ai_paths.json
+
+# Local runtime memory content (do not version)
+memory_voult/AGENT_MEMORY.md
+memory_voult/context/*.md
