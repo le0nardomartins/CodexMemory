@@ -63,11 +63,13 @@ How it can be reused
 - overwrite existing files
 - skip numbering
 - store trivial or redundant info
+- write context files in non-English language
 
 7. PRIORITIES:
 - long-term usefulness
 - clarity
 - structured knowledge
+- whenever creating or updating context_*.md, always write in English
 
 --------------------------------------------------
 GOAL

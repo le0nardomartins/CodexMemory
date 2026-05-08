@@ -9,7 +9,8 @@
     "desktop": "electron .",
     "daemon": "node server.js --mode daemon",
     "daemon:once": "node server.js --mode daemon --once",
-    "gui": "node server.js --mode gui"
+    "gui": "node server.js --mode gui",
+    "test:memory": "node --test tests/memory-regression.test.js"
   },
   "engines": {
     "node": ">=18"

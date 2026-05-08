@@ -10,7 +10,7 @@ Open source memory orchestration for context driven coding workflows.
 
 ## Overview
 
-Codex Memory is a local memory service that reads markdown contexts, consolidates long term operational memory with Ollama, and exposes a visual interface to inspect memory relationships.
+Codex Memory is a local memory service that reads markdown contexts, consolidates long term operational memory with a selectable engine (`ollama` or deterministic `algorithm`), and exposes a visual interface to inspect memory relationships.
 
 The project runs in three modes:
 
@@ -29,19 +29,24 @@ Context files are easy to write but hard to keep synchronized over time. Codex M
 
 ## Key Features
 
-1. Ollama driven memory consolidation with strict prompt rules
+1. Selectable memory engine per session: `ollama` or deterministic `algorithm`
 2. Automatic or manual `AGENT_MEMORY.md` refresh
-3. Context CRUD from GUI and API
-4. Graph based context visualization with hover metadata
-5. Multi language UI with automatic locale detection
-6. Desktop icon and branding from project assets
+3. Fast GUI startup without blocking consolidation on boot
+4. Context CRUD from GUI and API
+5. Graph based context visualization with hover metadata
+6. Persisted neuron graph snapshot for faster visualization loading
+7. Multi language UI with automatic locale detection
+8. Desktop icon and branding from project assets
+9. Canonical decisions with contradiction tracking and source traceability
+10. Rolling `AGENT_MEMORY.md` snapshots (latest 10)
+11. Context compression feature disabled (contexts are preserved)
 
 ## Quick Start
 
 ### Requirements
 
 1. Node.js 18+
-2. Ollama installed and available in `PATH`
+2. Ollama installed and available in `PATH` only if you run with `MEMORY_ENGINE=ollama`
 
 ### Install
 
@@ -106,6 +111,10 @@ CodexMemory/
     es-ES.json
   memory_voult/
     AGENT_MEMORY.md
+    .context_state.json
+    .canonical_state.json
+    .neuron_graph_snapshot.json
+    snapshots/
     context/
       context_*.md
   assets/
@@ -119,13 +128,22 @@ CodexMemory/
 ## Environment Variables
 
 1. `OLLAMA_MODEL` default `qwen2.5:3b`
-2. `OLLAMA_HOST` default `http://127.0.0.1:11434`
-3. `OLLAMA_TIMEOUT_SEC` default `120`
-4. `OLLAMA_CONTEXT_MAX_CHARS_PER_FILE` default `3500`
-5. `OLLAMA_CONTEXT_MAX_TOTAL_CHARS` default `22000`
-6. `DAEMON_REFRESH_SEC` default `300`
-7. `GUI_HOST` default `127.0.0.1`
-8. `GUI_PORT` default `4173`
+2. `MEMORY_ENGINE` default `ollama` (`ollama` or `algorithm`)
+3. `OLLAMA_HOST` default `http://127.0.0.1:11434`
+4. `OLLAMA_TIMEOUT_SEC` default `300`
+5. `OLLAMA_CONTEXT_MAX_CHARS_PER_FILE` default `3500`
+6. `OLLAMA_CONTEXT_MAX_TOTAL_CHARS` default `22000`
+7. `DAEMON_REFRESH_SEC` default `300`
+8. `GUI_HOST` default `127.0.0.1`
+9. `GUI_PORT` default `4173`
+
+When `MEMORY_ENGINE=algorithm`, Ollama is not loaded during the session.
+
+## Regression Tests
+
+```powershell
+npm run test:memory
+```
 
 ## API Summary
 

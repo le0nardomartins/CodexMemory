@@ -9,32 +9,26 @@ chcp 65001 >nul
 
 
 set "DEFAULT_OLLAMA_MODEL=qwen2.5:3b"
+set "MEMORY_ENGINE=ollama"
 
 set "ROOT=%cd%"
-
 set "HAS_PWSH=0"
+where /q powershell && set "HAS_PWSH=1"
 
 set "LOCALE=en-US"
 
 echo [BOOT] Detecting system language...
-where powershell >nul 2>nul && set "HAS_PWSH=1"
-
-if "%HAS_PWSH%"=="1" (
-
-  for /f "usebackq delims=" %%L in (`powershell -NoProfile -ExecutionPolicy Bypass -Command "[System.Globalization.CultureInfo]::InstalledUICulture.Name"`) do set "LOCALE=%%L"
-
-)
+for /f "tokens=2,*" %%A in ('reg query "HKCU\Control Panel\International" /v LocaleName 2^>nul ^| find /I "LocaleName"') do set "LOCALE=%%B"
+if not defined LOCALE set "LOCALE=en-US"
 
 echo [BOOT] Selected language: %LOCALE%
 echo [BOOT] Loading translated menu...
-echo [BOOT] Press any key to confirm language and continue...
-echo [BOOT] Pressione qualquer tecla para confirmar o idioma e continuar...
-pause >nul
 echo.
 
 
 
 call :load_texts
+call :select_memory_engine
 
 title %TXT_TITLE%
 
@@ -66,6 +60,8 @@ call :cecho 93 "  [7] %TXT_MENU_7%"
 
 call :cecho 91 "  [0] %TXT_MENU_0%"
 
+call :line
+call :cecho 96 "  %TXT_ENGINE_ACTIVE% %TXT_ENGINE_NAME%"
 call :line
 
 set "OPT="
@@ -110,6 +106,40 @@ goto menu
 
 
 
+:select_memory_engine
+
+call :line
+
+call :cecho 96 "%TXT_ENGINE_SELECT_TITLE%"
+
+call :cecho 93 "  [1] %TXT_ENGINE_OPTION_OLLAMA%"
+
+call :cecho 93 "  [2] %TXT_ENGINE_OPTION_ALGO%"
+
+set "ENGINE_OPT="
+
+set /p ENGINE_OPT="%TXT_ENGINE_PROMPT% "
+
+if "%ENGINE_OPT%"=="1" (
+  set "MEMORY_ENGINE=ollama"
+  set "TXT_ENGINE_NAME=%TXT_ENGINE_NAME_OLLAMA%"
+  call :cecho 92 "%TXT_ENGINE_SELECTED% %TXT_ENGINE_NAME%"
+  exit /b 0
+)
+
+if "%ENGINE_OPT%"=="2" (
+  set "MEMORY_ENGINE=algorithm"
+  set "TXT_ENGINE_NAME=%TXT_ENGINE_NAME_ALGO%"
+  call :cecho 92 "%TXT_ENGINE_SELECTED% %TXT_ENGINE_NAME%"
+  exit /b 0
+)
+
+call :cecho 91 "%TXT_INVALID_OPTION%"
+
+goto select_memory_engine
+
+
+
 :setup_and_start
 
 call :line
@@ -122,9 +152,12 @@ call :ensure_npm || exit /b 1
 
 call :ensure_dependencies || exit /b 1
 
-call :ensure_ollama || exit /b 1
-
-call :ensure_model || exit /b 1
+if /I "%MEMORY_ENGINE%"=="ollama" (
+  call :ensure_ollama || exit /b 1
+  call :ensure_model || exit /b 1
+) else (
+  call :cecho 93 "%TXT_OLLAMA_DISABLED%"
+)
 
 call :start_desktop
 
@@ -156,6 +189,11 @@ call :line
 
 call :cecho 96 "%TXT_OLLAMA_RESTART%"
 
+if /I not "%MEMORY_ENGINE%"=="ollama" (
+  call :cecho 93 "%TXT_OLLAMA_DISABLED%"
+  exit /b 0
+)
+
 call :ensure_ollama_cli || exit /b 1
 
 taskkill /F /T /IM "ollama.exe" >nul 2>nul
@@ -182,9 +220,10 @@ call :cecho 96 "%TXT_FORCE_MEMORY%"
 
 call :ensure_node || exit /b 1
 
-call :ensure_ollama || exit /b 1
-
-set "OLLAMA_MODEL=%DEFAULT_OLLAMA_MODEL%"
+if /I "%MEMORY_ENGINE%"=="ollama" (
+  call :ensure_ollama || exit /b 1
+  set "OLLAMA_MODEL=%DEFAULT_OLLAMA_MODEL%"
+)
 
 node server.js --mode daemon --once
 
@@ -207,6 +246,7 @@ exit /b 0
 call :line
 
 call :cecho 96 "%TXT_STATUS_TITLE%"
+call :cecho 93 " - %TXT_ENGINE_ACTIVE% %TXT_ENGINE_NAME%"
 
 tasklist /FI "IMAGENAME eq electron.exe" | find /I "electron.exe" >nul && (
 
@@ -272,6 +312,10 @@ cd /d "%ROOT%"
 
 call :cecho 93 "%TXT_GUI_WEB_RUNNING%"
 
+if /I "%MEMORY_ENGINE%"=="ollama" (
+  set "OLLAMA_MODEL=%DEFAULT_OLLAMA_MODEL%"
+)
+
 node server.js --mode gui
 
 if errorlevel 1 (
@@ -292,7 +336,11 @@ exit /b 0
 
 call :cecho 96 "%TXT_DESKTOP_START%"
 
-set "OLLAMA_MODEL=%DEFAULT_OLLAMA_MODEL%"
+set "DESKTOP_BOOT_LOG=%ROOT%\memory_voult\logs\desktop_boot.log"
+
+if /I "%MEMORY_ENGINE%"=="ollama" (
+  set "OLLAMA_MODEL=%DEFAULT_OLLAMA_MODEL%"
+)
 
 cd /d "%ROOT%"
 
@@ -303,6 +351,13 @@ call npm run desktop
 if errorlevel 1 (
 
   call :cecho 91 "%TXT_DESKTOP_FAIL%"
+
+  call :cecho 93 "%TXT_DESKTOP_LOG_FILE% %DESKTOP_BOOT_LOG%"
+
+  if exist "%DESKTOP_BOOT_LOG%" (
+    call :cecho 93 "%TXT_DESKTOP_LOG_TAIL%"
+    powershell -NoProfile -ExecutionPolicy Bypass -Command "Get-Content -LiteralPath '%DESKTOP_BOOT_LOG%' -Tail 30"
+  )
 
   exit /b 1
 
@@ -520,29 +575,9 @@ if "%MSG%"=="" (
 
 )
 
-set "FC=White"
-
-if "%C%"=="91" set "FC=Red"
-
-if "%C%"=="92" set "FC=Green"
-
-if "%C%"=="93" set "FC=Yellow"
-
-if "%C%"=="95" set "FC=Magenta"
-
-if "%C%"=="96" set "FC=Cyan"
-
-if "%HAS_PWSH%"=="1" (
-
-  set "CMSG=%MSG%"
-
-  powershell -NoProfile -ExecutionPolicy Bypass -Command "Write-Host $env:CMSG -ForegroundColor %FC%"
-
-) else (
-
-  echo %MSG%
-
-)
+rem Fast path: avoid spawning PowerShell for every line.
+rem This makes menu rendering immediate even on slower machines.
+echo(%MSG%
 
 exit /b 0
 
@@ -585,6 +620,22 @@ set "TXT_MENU_6=Encerrar tudo (GUI + Node + Ollama)"
 set "TXT_MENU_7=Iniciar apenas GUI web (node --mode gui)"
 
 set "TXT_MENU_0=Sair"
+
+set "TXT_ENGINE_SELECT_TITLE=[ENGINE] Escolha o motor de memoria"
+
+set "TXT_ENGINE_OPTION_OLLAMA=Ollama (IA)"
+
+set "TXT_ENGINE_OPTION_ALGO=Algoritmo deterministico (sem IA)"
+
+set "TXT_ENGINE_PROMPT=Selecione o motor [1-2]:"
+
+set "TXT_ENGINE_SELECTED=[OK] Motor selecionado:"
+
+set "TXT_ENGINE_ACTIVE=Motor atual:"
+
+set "TXT_ENGINE_NAME_OLLAMA=Ollama (IA)"
+
+set "TXT_ENGINE_NAME_ALGO=Algoritmo deterministico"
 
 set "TXT_PROMPT_OPTION=Escolha uma opcao:"
 
@@ -640,6 +691,10 @@ set "TXT_DESKTOP_FAIL=[ERRO] Desktop finalizou com erro."
 
 set "TXT_DESKTOP_OK=[OK] Desktop finalizado."
 
+set "TXT_DESKTOP_LOG_FILE=[INFO] Log detalhado:"
+
+set "TXT_DESKTOP_LOG_TAIL=[INFO] Ultimas linhas do log de boot:"
+
 set "TXT_GUI_STOP_OK=[OK] Processos da GUI encerrados."
 
 set "TXT_NODE_MISSING=[ERRO] Node.js nao encontrado no PATH."
@@ -651,6 +706,8 @@ set "TXT_NODE_INSTALL=[AJUDA] Baixe e instale Node.js 18+: https://nodejs.org"
 set "TXT_OLLAMA_MISSING=[ERRO] Ollama nao encontrado no PATH."
 
 set "TXT_OLLAMA_INSTALL=[AJUDA] Baixe e instale Ollama: https://ollama.com/download"
+
+set "TXT_OLLAMA_DISABLED=[INFO] Modo algoritmo ativo: Ollama nao sera iniciado nesta sessao."
 
 set "TXT_DEPS_OK=[OK] node_modules encontrado."
 
@@ -703,6 +760,22 @@ set "TXT_MENU_6=Cerrar todo (GUI + Node + Ollama)"
 set "TXT_MENU_7=Iniciar solo GUI web (node --mode gui)"
 
 set "TXT_MENU_0=Salir"
+
+set "TXT_ENGINE_SELECT_TITLE=[ENGINE] Elige el motor de memoria"
+
+set "TXT_ENGINE_OPTION_OLLAMA=Ollama (IA)"
+
+set "TXT_ENGINE_OPTION_ALGO=Algoritmo deterministico (sin IA)"
+
+set "TXT_ENGINE_PROMPT=Selecciona el motor [1-2]:"
+
+set "TXT_ENGINE_SELECTED=[OK] Motor seleccionado:"
+
+set "TXT_ENGINE_ACTIVE=Motor actual:"
+
+set "TXT_ENGINE_NAME_OLLAMA=Ollama (IA)"
+
+set "TXT_ENGINE_NAME_ALGO=Algoritmo deterministico"
 
 set "TXT_PROMPT_OPTION=Elige una opcion:"
 
@@ -758,6 +831,10 @@ set "TXT_DESKTOP_FAIL=[ERROR] Desktop finalizo con error."
 
 set "TXT_DESKTOP_OK=[OK] Desktop finalizado."
 
+set "TXT_DESKTOP_LOG_FILE=[INFO] Log detallado:"
+
+set "TXT_DESKTOP_LOG_TAIL=[INFO] Ultimas lineas del log de arranque:"
+
 set "TXT_GUI_STOP_OK=[OK] Procesos de GUI cerrados."
 
 set "TXT_NODE_MISSING=[ERROR] Node.js no encontrado en PATH."
@@ -769,6 +846,8 @@ set "TXT_NODE_INSTALL=[AYUDA] Descarga e instala Node.js 18+: https://nodejs.org
 set "TXT_OLLAMA_MISSING=[ERROR] Ollama no encontrado en PATH."
 
 set "TXT_OLLAMA_INSTALL=[AYUDA] Descarga e instala Ollama: https://ollama.com/download"
+
+set "TXT_OLLAMA_DISABLED=[INFO] Modo algoritmo activo: Ollama no se iniciara en esta sesion."
 
 set "TXT_DEPS_OK=[OK] node_modules encontrado."
 
@@ -821,6 +900,22 @@ set "TXT_MENU_6=Stop everything (GUI + Node + Ollama)"
 set "TXT_MENU_7=Start web GUI only (node --mode gui)"
 
 set "TXT_MENU_0=Exit"
+
+set "TXT_ENGINE_SELECT_TITLE=[ENGINE] Choose memory engine"
+
+set "TXT_ENGINE_OPTION_OLLAMA=Ollama (AI)"
+
+set "TXT_ENGINE_OPTION_ALGO=Deterministic algorithm (no AI)"
+
+set "TXT_ENGINE_PROMPT=Select engine [1-2]:"
+
+set "TXT_ENGINE_SELECTED=[OK] Engine selected:"
+
+set "TXT_ENGINE_ACTIVE=Current engine:"
+
+set "TXT_ENGINE_NAME_OLLAMA=Ollama (AI)"
+
+set "TXT_ENGINE_NAME_ALGO=Deterministic algorithm"
 
 set "TXT_PROMPT_OPTION=Choose an option:"
 
@@ -876,6 +971,10 @@ set "TXT_DESKTOP_FAIL=[ERROR] Desktop exited with error."
 
 set "TXT_DESKTOP_OK=[OK] Desktop finished."
 
+set "TXT_DESKTOP_LOG_FILE=[INFO] Detailed log:"
+
+set "TXT_DESKTOP_LOG_TAIL=[INFO] Last lines from boot log:"
+
 set "TXT_GUI_STOP_OK=[OK] GUI processes stopped."
 
 set "TXT_NODE_MISSING=[ERROR] Node.js not found in PATH."
@@ -887,6 +986,8 @@ set "TXT_NODE_INSTALL=[HELP] Download and install Node.js 18+: https://nodejs.or
 set "TXT_OLLAMA_MISSING=[ERROR] Ollama not found in PATH."
 
 set "TXT_OLLAMA_INSTALL=[HELP] Download and install Ollama: https://ollama.com/download"
+
+set "TXT_OLLAMA_DISABLED=[INFO] Algorithm mode active: Ollama will not start in this session."
 
 set "TXT_DEPS_OK=[OK] node_modules found."
 
@@ -925,4 +1026,3 @@ exit /b 0
 endlocal
 
 exit /b 0
-

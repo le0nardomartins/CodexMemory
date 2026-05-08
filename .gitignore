@@ -56,3 +56,5 @@ ai_paths.json
 # Local runtime memory content (do not version)
 memory_voult/AGENT_MEMORY.md
 memory_voult/context/*.md
+memory_voult/.sync_state.json
+memory_voult/.context_state.json

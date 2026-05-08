@@ -1,0 +1,1949 @@
+{
+  "graph": {
+    "nodes": [
+      {
+        "id": "context_1.md",
+        "label": "context_1.md",
+        "relativePath": "memory_voult/context/context_1.md",
+        "area": "PROJECT_MEMORY",
+        "subarea": "encoding_integrity",
+        "archived": false,
+        "tokenCount": 150,
+        "keywords": [
+          "always",
+          "code",
+          "use",
+          "files",
+          "never",
+          "system",
+          "production",
+          "variables",
+          "ensure",
+          "development"
+        ],
+        "radius": 24
+      },
+      {
+        "id": "context_2.md",
+        "label": "context_2.md",
+        "relativePath": "memory_voult/context/context_2.md",
+        "area": "ARCHITECTURE_AND_DESIGN",
+        "subarea": "modularity",
+        "archived": false,
+        "tokenCount": 172,
+        "keywords": [
+          "performance",
+          "context",
+          "usage",
+          "when",
+          "defined",
+          "memory",
+          "technology",
+          "flexibility",
+          "library",
+          "architecture"
+        ],
+        "radius": 25
+      },
+      {
+        "id": "context_3.md",
+        "label": "context_3.md",
+        "relativePath": "memory_voult/context/context_3.md",
+        "area": "QUALITY_AND_SECURITY",
+        "subarea": "authentication",
+        "archived": false,
+        "tokenCount": 103,
+        "keywords": [
+          "quality",
+          "professional",
+          "user",
+          "production",
+          "hardening",
+          "delivery",
+          "end",
+          "secret",
+          "controls",
+          "onboarding"
+        ],
+        "radius": 22
+      },
+      {
+        "id": "context_4.md",
+        "label": "context_4.md",
+        "relativePath": "memory_voult/context/context_4.md",
+        "area": "REQUIREMENT_UNDERSTANDING",
+        "subarea": "visual_direction",
+        "archived": false,
+        "tokenCount": 70,
+        "keywords": [
+          "future",
+          "frontend",
+          "visual",
+          "preference",
+          "modern",
+          "elegant",
+          "user",
+          "mobile",
+          "first",
+          "memory"
+        ],
+        "radius": 20
+      },
+      {
+        "id": "context_5.md",
+        "label": "context_5.md",
+        "relativePath": "memory_voult/context/context_5.md",
+        "area": "REQUIREMENT_UNDERSTANDING",
+        "subarea": "visual_direction",
+        "archived": false,
+        "tokenCount": 78,
+        "keywords": [
+          "blue",
+          "future",
+          "user",
+          "formal",
+          "sporty",
+          "frontend",
+          "visual",
+          "memory",
+          "context",
+          "summary"
+        ],
+        "radius": 20
+      },
+      {
+        "id": "context_6.md",
+        "label": "context_6.md",
+        "relativePath": "memory_voult/context/context_6.md",
+        "area": "CODE_REASONING",
+        "subarea": "general",
+        "archived": false,
+        "tokenCount": 55,
+        "keywords": [
+          "context",
+          "summary",
+          "recovered",
+          "compressed",
+          "after",
+          "rollback",
+          "details",
+          "zone",
+          "memory",
+          "was"
+        ],
+        "radius": 19
+      },
+      {
+        "id": "context_7.md",
+        "label": "context_7.md",
+        "relativePath": "memory_voult/context/context_7.md",
+        "area": "CODE_REASONING",
+        "subarea": "general",
+        "archived": false,
+        "tokenCount": 53,
+        "keywords": [
+          "context",
+          "summary",
+          "recovered",
+          "compressed",
+          "after",
+          "rollback",
+          "details",
+          "why",
+          "matters",
+          "possible"
+        ],
+        "radius": 19
+      },
+      {
+        "id": "context_8.md",
+        "label": "context_8.md",
+        "relativePath": "memory_voult/context/context_8.md",
+        "area": "CODE_REASONING",
+        "subarea": "general",
+        "archived": false,
+        "tokenCount": 53,
+        "keywords": [
+          "context",
+          "summary",
+          "recovered",
+          "compressed",
+          "after",
+          "rollback",
+          "details",
+          "why",
+          "matters",
+          "possible"
+        ],
+        "radius": 19
+      },
+      {
+        "id": "context_9.md",
+        "label": "context_9.md",
+        "relativePath": "memory_voult/context/context_9.md",
+        "area": "CODE_REASONING",
+        "subarea": "general",
+        "archived": false,
+        "tokenCount": 52,
+        "keywords": [
+          "context",
+          "summary",
+          "memory",
+          "recovered",
+          "compressed",
+          "after",
+          "rollback",
+          "details",
+          "why",
+          "matters"
+        ],
+        "radius": 19
+      },
+      {
+        "id": "context_10.md",
+        "label": "context_10.md",
+        "relativePath": "memory_voult/context/context_10.md",
+        "area": "CODE_REASONING",
+        "subarea": "general",
+        "archived": false,
+        "tokenCount": 52,
+        "keywords": [
+          "context",
+          "summary",
+          "memory",
+          "recovered",
+          "compressed",
+          "after",
+          "rollback",
+          "details",
+          "why",
+          "matters"
+        ],
+        "radius": 19
+      },
+      {
+        "id": "context_11.md",
+        "label": "context_11.md",
+        "relativePath": "memory_voult/context/context_11.md",
+        "area": "EXECUTION_AND_TOOLING",
+        "subarea": "serial_runtime",
+        "archived": false,
+        "tokenCount": 68,
+        "keywords": [
+          "context",
+          "summary",
+          "dashboard",
+          "recovered",
+          "compressed",
+          "after",
+          "rollback",
+          "details",
+          "fechar",
+          "deve"
+        ],
+        "radius": 20
+      },
+      {
+        "id": "context_12.md",
+        "label": "context_12.md",
+        "relativePath": "memory_voult/context/context_12.md",
+        "area": "CODE_REASONING",
+        "subarea": "general",
+        "archived": false,
+        "tokenCount": 53,
+        "keywords": [
+          "context",
+          "summary",
+          "recovered",
+          "compressed",
+          "after",
+          "rollback",
+          "details",
+          "why",
+          "matters",
+          "possible"
+        ],
+        "radius": 19
+      },
+      {
+        "id": "context_13.md",
+        "label": "context_13.md",
+        "relativePath": "memory_voult/context/context_13.md",
+        "area": "EXECUTION_AND_TOOLING",
+        "subarea": "serial_runtime",
+        "archived": false,
+        "tokenCount": 61,
+        "keywords": [
+          "context",
+          "summary",
+          "recovered",
+          "compressed",
+          "after",
+          "rollback",
+          "details",
+          "why",
+          "matters",
+          "memory"
+        ],
+        "radius": 19
+      },
+      {
+        "id": "context_14.md",
+        "label": "context_14.md",
+        "relativePath": "memory_voult/context/context_14.md",
+        "area": "EXECUTION_AND_TOOLING",
+        "subarea": "serial_runtime",
+        "archived": false,
+        "tokenCount": 62,
+        "keywords": [
+          "serial",
+          "visual",
+          "cores",
+          "foi",
+          "memory",
+          "context",
+          "summary",
+          "preferencia",
+          "diferenciar",
+          "claramente"
+        ],
+        "radius": 19
+      },
+      {
+        "id": "context_15.md",
+        "label": "context_15.md",
+        "relativePath": "memory_voult/context/context_15.md",
+        "area": "CODE_REASONING",
+        "subarea": "general",
+        "archived": false,
+        "tokenCount": 53,
+        "keywords": [
+          "context",
+          "summary",
+          "recovered",
+          "compressed",
+          "after",
+          "rollback",
+          "details",
+          "why",
+          "matters",
+          "possible"
+        ],
+        "radius": 19
+      },
+      {
+        "id": "context_16.md",
+        "label": "context_16.md",
+        "relativePath": "memory_voult/context/context_16.md",
+        "area": "CODE_REASONING",
+        "subarea": "general",
+        "archived": false,
+        "tokenCount": 53,
+        "keywords": [
+          "context",
+          "summary",
+          "recovered",
+          "compressed",
+          "after",
+          "rollback",
+          "details",
+          "why",
+          "matters",
+          "possible"
+        ],
+        "radius": 19
+      },
+      {
+        "id": "context_17.md",
+        "label": "context_17.md",
+        "relativePath": "memory_voult/context/context_17.md",
+        "area": "EXECUTION_AND_TOOLING",
+        "subarea": "serial_runtime",
+        "archived": false,
+        "tokenCount": 71,
+        "keywords": [
+          "servidor",
+          "serial",
+          "arduino",
+          "ajustes",
+          "teste",
+          "deve",
+          "fica",
+          "memory",
+          "context",
+          "summary"
+        ],
+        "radius": 20
+      },
+      {
+        "id": "context_18.md",
+        "label": "context_18.md",
+        "relativePath": "memory_voult/context/context_18.md",
+        "area": "REQUIREMENT_UNDERSTANDING",
+        "subarea": "visual_direction",
+        "archived": false,
+        "tokenCount": 76,
+        "keywords": [
+          "visual",
+          "tema",
+          "cinza",
+          "escuro",
+          "dark",
+          "preto",
+          "fosco",
+          "textos",
+          "contraste",
+          "claro"
+        ],
+        "radius": 20
+      },
+      {
+        "id": "context_19.md",
+        "label": "context_19.md",
+        "relativePath": "memory_voult/context/context_19.md",
+        "area": "REQUIREMENT_UNDERSTANDING",
+        "subarea": "visual_direction",
+        "archived": false,
+        "tokenCount": 92,
+        "keywords": [
+          "visual",
+          "matte",
+          "branco",
+          "hover",
+          "usuario",
+          "tema",
+          "bordas",
+          "estados",
+          "active",
+          "ttk"
+        ],
+        "radius": 21
+      },
+      {
+        "id": "context_20.md",
+        "label": "context_20.md",
+        "relativePath": "memory_voult/context/context_20.md",
+        "area": "EXECUTION_AND_TOOLING",
+        "subarea": "general",
+        "archived": false,
+        "tokenCount": 125,
+        "keywords": [
+          "clients",
+          "api",
+          "operations",
+          "get",
+          "wireguard",
+          "vpn",
+          "technical",
+          "env",
+          "readme",
+          "name"
+        ],
+        "radius": 23
+      },
+      {
+        "id": "context_21.md",
+        "label": "context_21.md",
+        "relativePath": "memory_voult/context/context_21.md",
+        "area": "EXECUTION_AND_TOOLING",
+        "subarea": "build_process",
+        "archived": false,
+        "tokenCount": 119,
+        "keywords": [
+          "wireguard",
+          "logs",
+          "runtime",
+          "interface",
+          "ubuntu",
+          "peer",
+          "docker",
+          "based",
+          "during",
+          "checks"
+        ],
+        "radius": 22
+      },
+      {
+        "id": "context_22.md",
+        "label": "context_22.md",
+        "relativePath": "memory_voult/context/context_22.md",
+        "area": "EXECUTION_AND_TOOLING",
+        "subarea": "observability",
+        "archived": false,
+        "tokenCount": 124,
+        "keywords": [
+          "runtime",
+          "diagnostics",
+          "context",
+          "now",
+          "railway",
+          "environment",
+          "variable",
+          "startup",
+          "vpn",
+          "configuration"
+        ],
+        "radius": 23
+      },
+      {
+        "id": "context_23.md",
+        "label": "context_23.md",
+        "relativePath": "memory_voult/context/context_23.md",
+        "area": "PROJECT_MEMORY",
+        "subarea": "configuration",
+        "archived": false,
+        "tokenCount": 99,
+        "keywords": [
+          "railway",
+          "public",
+          "http",
+          "api",
+          "udp",
+          "endpoint",
+          "vpn",
+          "domain",
+          "wireguard",
+          "exposure"
+        ],
+        "radius": 21
+      },
+      {
+        "id": "context_24.md",
+        "label": "context_24.md",
+        "relativePath": "memory_voult/context/context_24.md",
+        "area": "EXECUTION_AND_TOOLING",
+        "subarea": "daemon_runtime",
+        "archived": false,
+        "tokenCount": 120,
+        "keywords": [
+          "consolidation",
+          "context",
+          "gui",
+          "startup",
+          "graph",
+          "memory",
+          "loading",
+          "boot",
+          "was",
+          "longer"
+        ],
+        "radius": 22
+      },
+      {
+        "id": "context_25.md",
+        "label": "context_25.md",
+        "relativePath": "memory_voult/context/context_25.md",
+        "area": "EXECUTION_AND_TOOLING",
+        "subarea": "daemon_runtime",
+        "archived": false,
+        "tokenCount": 120,
+        "keywords": [
+          "gui",
+          "server",
+          "failures",
+          "port",
+          "timeout",
+          "boot",
+          "startup",
+          "now",
+          "log",
+          "desktop"
+        ],
+        "radius": 22
+      },
+      {
+        "id": "context_26.md",
+        "label": "context_26.md",
+        "relativePath": "memory_voult/context/context_26.md",
+        "area": "CODE_REASONING",
+        "subarea": "general",
+        "archived": false,
+        "tokenCount": 88,
+        "keywords": [
+          "menu",
+          "rendering",
+          "line",
+          "output",
+          "batch",
+          "avoid",
+          "per",
+          "powershell",
+          "function",
+          "memory"
+        ],
+        "radius": 21
+      },
+      {
+        "id": "context_27.md",
+        "label": "context_27.md",
+        "relativePath": "memory_voult/context/context_27.md",
+        "area": "REQUIREMENT_UNDERSTANDING",
+        "subarea": "visual_direction",
+        "archived": false,
+        "tokenCount": 98,
+        "keywords": [
+          "context",
+          "startup",
+          "persisted",
+          "content",
+          "snapshot",
+          "graph",
+          "neurons",
+          "loading",
+          "deferred",
+          "first"
+        ],
+        "radius": 21
+      },
+      {
+        "id": "context_28.md",
+        "label": "context_28.md",
+        "relativePath": "memory_voult/context/context_28.md",
+        "area": "REQUIREMENT_UNDERSTANDING",
+        "subarea": "visual_direction",
+        "archived": false,
+        "tokenCount": 111,
+        "keywords": [
+          "context",
+          "fallback",
+          "foundation",
+          "full",
+          "startup",
+          "memory",
+          "neural",
+          "must",
+          "without",
+          "loading"
+        ],
+        "radius": 22
+      },
+      {
+        "id": "context_29.md",
+        "label": "context_29.md",
+        "relativePath": "memory_voult/context/context_29.md",
+        "area": "EXECUTION_AND_TOOLING",
+        "subarea": "daemon_runtime",
+        "archived": false,
+        "tokenCount": 102,
+        "keywords": [
+          "control",
+          "gui",
+          "defaults",
+          "daemon",
+          "zoom",
+          "recenter",
+          "auto",
+          "out",
+          "was",
+          "text"
+        ],
+        "radius": 22
+      }
+    ],
+    "links": [
+      {
+        "source": "context_1.md",
+        "target": "context_2.md",
+        "weight": 0.65,
+        "shared": [
+          "explicit-reference"
+        ]
+      },
+      {
+        "source": "context_1.md",
+        "target": "context_23.md",
+        "weight": 0.78,
+        "shared": [
+          "memory-reference"
+        ]
+      },
+      {
+        "source": "context_1.md",
+        "target": "context_28.md",
+        "weight": 0.65,
+        "shared": [
+          "explicit-reference"
+        ]
+      },
+      {
+        "source": "context_2.md",
+        "target": "context_5.md",
+        "weight": 0.111,
+        "shared": [
+          "context",
+          "memory"
+        ]
+      },
+      {
+        "source": "context_2.md",
+        "target": "context_6.md",
+        "weight": 0.111,
+        "shared": [
+          "context",
+          "memory"
+        ]
+      },
+      {
+        "source": "context_2.md",
+        "target": "context_9.md",
+        "weight": 0.111,
+        "shared": [
+          "context",
+          "memory"
+        ]
+      },
+      {
+        "source": "context_2.md",
+        "target": "context_10.md",
+        "weight": 0.111,
+        "shared": [
+          "context",
+          "memory"
+        ]
+      },
+      {
+        "source": "context_2.md",
+        "target": "context_13.md",
+        "weight": 0.111,
+        "shared": [
+          "context",
+          "memory"
+        ]
+      },
+      {
+        "source": "context_2.md",
+        "target": "context_14.md",
+        "weight": 0.111,
+        "shared": [
+          "context",
+          "memory"
+        ]
+      },
+      {
+        "source": "context_2.md",
+        "target": "context_17.md",
+        "weight": 0.111,
+        "shared": [
+          "context",
+          "memory"
+        ]
+      },
+      {
+        "source": "context_2.md",
+        "target": "context_24.md",
+        "weight": 0.111,
+        "shared": [
+          "context",
+          "memory"
+        ]
+      },
+      {
+        "source": "context_2.md",
+        "target": "context_28.md",
+        "weight": 0.111,
+        "shared": [
+          "context",
+          "memory"
+        ]
+      },
+      {
+        "source": "context_4.md",
+        "target": "context_5.md",
+        "weight": 0.333,
+        "shared": [
+          "future",
+          "frontend",
+          "visual",
+          "user",
+          "memory"
+        ]
+      },
+      {
+        "source": "context_4.md",
+        "target": "context_14.md",
+        "weight": 0.111,
+        "shared": [
+          "visual",
+          "memory"
+        ]
+      },
+      {
+        "source": "context_5.md",
+        "target": "context_6.md",
+        "weight": 0.176,
+        "shared": [
+          "memory",
+          "context",
+          "summary"
+        ]
+      },
+      {
+        "source": "context_5.md",
+        "target": "context_7.md",
+        "weight": 0.111,
+        "shared": [
+          "context",
+          "summary"
+        ]
+      },
+      {
+        "source": "context_5.md",
+        "target": "context_8.md",
+        "weight": 0.111,
+        "shared": [
+          "context",
+          "summary"
+        ]
+      },
+      {
+        "source": "context_5.md",
+        "target": "context_9.md",
+        "weight": 0.176,
+        "shared": [
+          "memory",
+          "context",
+          "summary"
+        ]
+      },
+      {
+        "source": "context_5.md",
+        "target": "context_10.md",
+        "weight": 0.176,
+        "shared": [
+          "memory",
+          "context",
+          "summary"
+        ]
+      },
+      {
+        "source": "context_5.md",
+        "target": "context_11.md",
+        "weight": 0.111,
+        "shared": [
+          "context",
+          "summary"
+        ]
+      },
+      {
+        "source": "context_5.md",
+        "target": "context_12.md",
+        "weight": 0.111,
+        "shared": [
+          "context",
+          "summary"
+        ]
+      },
+      {
+        "source": "context_5.md",
+        "target": "context_13.md",
+        "weight": 0.176,
+        "shared": [
+          "memory",
+          "context",
+          "summary"
+        ]
+      },
+      {
+        "source": "context_5.md",
+        "target": "context_14.md",
+        "weight": 0.25,
+        "shared": [
+          "visual",
+          "memory",
+          "context",
+          "summary"
+        ]
+      },
+      {
+        "source": "context_5.md",
+        "target": "context_15.md",
+        "weight": 0.111,
+        "shared": [
+          "context",
+          "summary"
+        ]
+      },
+      {
+        "source": "context_5.md",
+        "target": "context_16.md",
+        "weight": 0.111,
+        "shared": [
+          "context",
+          "summary"
+        ]
+      },
+      {
+        "source": "context_5.md",
+        "target": "context_17.md",
+        "weight": 0.176,
+        "shared": [
+          "memory",
+          "context",
+          "summary"
+        ]
+      },
+      {
+        "source": "context_5.md",
+        "target": "context_24.md",
+        "weight": 0.111,
+        "shared": [
+          "memory",
+          "context"
+        ]
+      },
+      {
+        "source": "context_5.md",
+        "target": "context_28.md",
+        "weight": 0.111,
+        "shared": [
+          "memory",
+          "context"
+        ]
+      },
+      {
+        "source": "context_6.md",
+        "target": "context_7.md",
+        "weight": 0.538,
+        "shared": [
+          "context",
+          "summary",
+          "recovered",
+          "compressed",
+          "after"
+        ]
+      },
+      {
+        "source": "context_6.md",
+        "target": "context_8.md",
+        "weight": 0.538,
+        "shared": [
+          "context",
+          "summary",
+          "recovered",
+          "compressed",
+          "after"
+        ]
+      },
+      {
+        "source": "context_6.md",
+        "target": "context_9.md",
+        "weight": 0.667,
+        "shared": [
+          "context",
+          "summary",
+          "recovered",
+          "compressed",
+          "after"
+        ]
+      },
+      {
+        "source": "context_6.md",
+        "target": "context_10.md",
+        "weight": 0.667,
+        "shared": [
+          "context",
+          "summary",
+          "recovered",
+          "compressed",
+          "after"
+        ]
+      },
+      {
+        "source": "context_6.md",
+        "target": "context_11.md",
+        "weight": 0.538,
+        "shared": [
+          "context",
+          "summary",
+          "recovered",
+          "compressed",
+          "after"
+        ]
+      },
+      {
+        "source": "context_6.md",
+        "target": "context_12.md",
+        "weight": 0.538,
+        "shared": [
+          "context",
+          "summary",
+          "recovered",
+          "compressed",
+          "after"
+        ]
+      },
+      {
+        "source": "context_6.md",
+        "target": "context_13.md",
+        "weight": 0.667,
+        "shared": [
+          "context",
+          "summary",
+          "recovered",
+          "compressed",
+          "after"
+        ]
+      },
+      {
+        "source": "context_6.md",
+        "target": "context_14.md",
+        "weight": 0.176,
+        "shared": [
+          "context",
+          "summary",
+          "memory"
+        ]
+      },
+      {
+        "source": "context_6.md",
+        "target": "context_15.md",
+        "weight": 0.538,
+        "shared": [
+          "context",
+          "summary",
+          "recovered",
+          "compressed",
+          "after"
+        ]
+      },
+      {
+        "source": "context_6.md",
+        "target": "context_16.md",
+        "weight": 0.538,
+        "shared": [
+          "context",
+          "summary",
+          "recovered",
+          "compressed",
+          "after"
+        ]
+      },
+      {
+        "source": "context_6.md",
+        "target": "context_17.md",
+        "weight": 0.176,
+        "shared": [
+          "context",
+          "summary",
+          "memory"
+        ]
+      },
+      {
+        "source": "context_6.md",
+        "target": "context_24.md",
+        "weight": 0.176,
+        "shared": [
+          "context",
+          "memory",
+          "was"
+        ]
+      },
+      {
+        "source": "context_6.md",
+        "target": "context_28.md",
+        "weight": 0.111,
+        "shared": [
+          "context",
+          "memory"
+        ]
+      },
+      {
+        "source": "context_7.md",
+        "target": "context_8.md",
+        "weight": 1,
+        "shared": [
+          "context",
+          "summary",
+          "recovered",
+          "compressed",
+          "after"
+        ]
+      },
+      {
+        "source": "context_7.md",
+        "target": "context_9.md",
+        "weight": 0.818,
+        "shared": [
+          "context",
+          "summary",
+          "recovered",
+          "compressed",
+          "after"
+        ]
+      },
+      {
+        "source": "context_7.md",
+        "target": "context_10.md",
+        "weight": 0.818,
+        "shared": [
+          "context",
+          "summary",
+          "recovered",
+          "compressed",
+          "after"
+        ]
+      },
+      {
+        "source": "context_7.md",
+        "target": "context_11.md",
+        "weight": 0.538,
+        "shared": [
+          "context",
+          "summary",
+          "recovered",
+          "compressed",
+          "after"
+        ]
+      },
+      {
+        "source": "context_7.md",
+        "target": "context_12.md",
+        "weight": 1,
+        "shared": [
+          "context",
+          "summary",
+          "recovered",
+          "compressed",
+          "after"
+        ]
+      },
+      {
+        "source": "context_7.md",
+        "target": "context_13.md",
+        "weight": 0.818,
+        "shared": [
+          "context",
+          "summary",
+          "recovered",
+          "compressed",
+          "after"
+        ]
+      },
+      {
+        "source": "context_7.md",
+        "target": "context_14.md",
+        "weight": 0.111,
+        "shared": [
+          "context",
+          "summary"
+        ]
+      },
+      {
+        "source": "context_7.md",
+        "target": "context_15.md",
+        "weight": 1,
+        "shared": [
+          "context",
+          "summary",
+          "recovered",
+          "compressed",
+          "after"
+        ]
+      },
+      {
+        "source": "context_7.md",
+        "target": "context_16.md",
+        "weight": 1,
+        "shared": [
+          "context",
+          "summary",
+          "recovered",
+          "compressed",
+          "after"
+        ]
+      },
+      {
+        "source": "context_7.md",
+        "target": "context_17.md",
+        "weight": 0.111,
+        "shared": [
+          "context",
+          "summary"
+        ]
+      },
+      {
+        "source": "context_8.md",
+        "target": "context_9.md",
+        "weight": 0.818,
+        "shared": [
+          "context",
+          "summary",
+          "recovered",
+          "compressed",
+          "after"
+        ]
+      },
+      {
+        "source": "context_8.md",
+        "target": "context_10.md",
+        "weight": 0.818,
+        "shared": [
+          "context",
+          "summary",
+          "recovered",
+          "compressed",
+          "after"
+        ]
+      },
+      {
+        "source": "context_8.md",
+        "target": "context_11.md",
+        "weight": 0.538,
+        "shared": [
+          "context",
+          "summary",
+          "recovered",
+          "compressed",
+          "after"
+        ]
+      },
+      {
+        "source": "context_8.md",
+        "target": "context_12.md",
+        "weight": 1,
+        "shared": [
+          "context",
+          "summary",
+          "recovered",
+          "compressed",
+          "after"
+        ]
+      },
+      {
+        "source": "context_8.md",
+        "target": "context_13.md",
+        "weight": 0.818,
+        "shared": [
+          "context",
+          "summary",
+          "recovered",
+          "compressed",
+          "after"
+        ]
+      },
+      {
+        "source": "context_8.md",
+        "target": "context_14.md",
+        "weight": 0.111,
+        "shared": [
+          "context",
+          "summary"
+        ]
+      },
+      {
+        "source": "context_8.md",
+        "target": "context_15.md",
+        "weight": 1,
+        "shared": [
+          "context",
+          "summary",
+          "recovered",
+          "compressed",
+          "after"
+        ]
+      },
+      {
+        "source": "context_8.md",
+        "target": "context_16.md",
+        "weight": 1,
+        "shared": [
+          "context",
+          "summary",
+          "recovered",
+          "compressed",
+          "after"
+        ]
+      },
+      {
+        "source": "context_8.md",
+        "target": "context_17.md",
+        "weight": 0.111,
+        "shared": [
+          "context",
+          "summary"
+        ]
+      },
+      {
+        "source": "context_9.md",
+        "target": "context_10.md",
+        "weight": 1,
+        "shared": [
+          "context",
+          "summary",
+          "memory",
+          "recovered",
+          "compressed"
+        ]
+      },
+      {
+        "source": "context_9.md",
+        "target": "context_11.md",
+        "weight": 0.538,
+        "shared": [
+          "context",
+          "summary",
+          "recovered",
+          "compressed",
+          "after"
+        ]
+      },
+      {
+        "source": "context_9.md",
+        "target": "context_12.md",
+        "weight": 0.818,
+        "shared": [
+          "context",
+          "summary",
+          "recovered",
+          "compressed",
+          "after"
+        ]
+      },
+      {
+        "source": "context_9.md",
+        "target": "context_13.md",
+        "weight": 1,
+        "shared": [
+          "context",
+          "summary",
+          "memory",
+          "recovered",
+          "compressed"
+        ]
+      },
+      {
+        "source": "context_9.md",
+        "target": "context_14.md",
+        "weight": 0.176,
+        "shared": [
+          "context",
+          "summary",
+          "memory"
+        ]
+      },
+      {
+        "source": "context_9.md",
+        "target": "context_15.md",
+        "weight": 0.818,
+        "shared": [
+          "context",
+          "summary",
+          "recovered",
+          "compressed",
+          "after"
+        ]
+      },
+      {
+        "source": "context_9.md",
+        "target": "context_16.md",
+        "weight": 0.818,
+        "shared": [
+          "context",
+          "summary",
+          "recovered",
+          "compressed",
+          "after"
+        ]
+      },
+      {
+        "source": "context_9.md",
+        "target": "context_17.md",
+        "weight": 0.176,
+        "shared": [
+          "context",
+          "summary",
+          "memory"
+        ]
+      },
+      {
+        "source": "context_9.md",
+        "target": "context_24.md",
+        "weight": 0.111,
+        "shared": [
+          "context",
+          "memory"
+        ]
+      },
+      {
+        "source": "context_9.md",
+        "target": "context_28.md",
+        "weight": 0.111,
+        "shared": [
+          "context",
+          "memory"
+        ]
+      },
+      {
+        "source": "context_10.md",
+        "target": "context_11.md",
+        "weight": 0.538,
+        "shared": [
+          "context",
+          "summary",
+          "recovered",
+          "compressed",
+          "after"
+        ]
+      },
+      {
+        "source": "context_10.md",
+        "target": "context_12.md",
+        "weight": 0.818,
+        "shared": [
+          "context",
+          "summary",
+          "recovered",
+          "compressed",
+          "after"
+        ]
+      },
+      {
+        "source": "context_10.md",
+        "target": "context_13.md",
+        "weight": 1,
+        "shared": [
+          "context",
+          "summary",
+          "memory",
+          "recovered",
+          "compressed"
+        ]
+      },
+      {
+        "source": "context_10.md",
+        "target": "context_14.md",
+        "weight": 0.176,
+        "shared": [
+          "context",
+          "summary",
+          "memory"
+        ]
+      },
+      {
+        "source": "context_10.md",
+        "target": "context_15.md",
+        "weight": 0.818,
+        "shared": [
+          "context",
+          "summary",
+          "recovered",
+          "compressed",
+          "after"
+        ]
+      },
+      {
+        "source": "context_10.md",
+        "target": "context_16.md",
+        "weight": 0.818,
+        "shared": [
+          "context",
+          "summary",
+          "recovered",
+          "compressed",
+          "after"
+        ]
+      },
+      {
+        "source": "context_10.md",
+        "target": "context_17.md",
+        "weight": 0.176,
+        "shared": [
+          "context",
+          "summary",
+          "memory"
+        ]
+      },
+      {
+        "source": "context_10.md",
+        "target": "context_24.md",
+        "weight": 0.111,
+        "shared": [
+          "context",
+          "memory"
+        ]
+      },
+      {
+        "source": "context_10.md",
+        "target": "context_28.md",
+        "weight": 0.111,
+        "shared": [
+          "context",
+          "memory"
+        ]
+      },
+      {
+        "source": "context_11.md",
+        "target": "context_12.md",
+        "weight": 0.538,
+        "shared": [
+          "context",
+          "summary",
+          "recovered",
+          "compressed",
+          "after"
+        ]
+      },
+      {
+        "source": "context_11.md",
+        "target": "context_13.md",
+        "weight": 0.538,
+        "shared": [
+          "context",
+          "summary",
+          "recovered",
+          "compressed",
+          "after"
+        ]
+      },
+      {
+        "source": "context_11.md",
+        "target": "context_14.md",
+        "weight": 0.111,
+        "shared": [
+          "context",
+          "summary"
+        ]
+      },
+      {
+        "source": "context_11.md",
+        "target": "context_15.md",
+        "weight": 0.538,
+        "shared": [
+          "context",
+          "summary",
+          "recovered",
+          "compressed",
+          "after"
+        ]
+      },
+      {
+        "source": "context_11.md",
+        "target": "context_16.md",
+        "weight": 0.538,
+        "shared": [
+          "context",
+          "summary",
+          "recovered",
+          "compressed",
+          "after"
+        ]
+      },
+      {
+        "source": "context_11.md",
+        "target": "context_17.md",
+        "weight": 0.176,
+        "shared": [
+          "context",
+          "summary",
+          "deve"
+        ]
+      },
+      {
+        "source": "context_12.md",
+        "target": "context_13.md",
+        "weight": 0.818,
+        "shared": [
+          "context",
+          "summary",
+          "recovered",
+          "compressed",
+          "after"
+        ]
+      },
+      {
+        "source": "context_12.md",
+        "target": "context_14.md",
+        "weight": 0.111,
+        "shared": [
+          "context",
+          "summary"
+        ]
+      },
+      {
+        "source": "context_12.md",
+        "target": "context_15.md",
+        "weight": 1,
+        "shared": [
+          "context",
+          "summary",
+          "recovered",
+          "compressed",
+          "after"
+        ]
+      },
+      {
+        "source": "context_12.md",
+        "target": "context_16.md",
+        "weight": 1,
+        "shared": [
+          "context",
+          "summary",
+          "recovered",
+          "compressed",
+          "after"
+        ]
+      },
+      {
+        "source": "context_12.md",
+        "target": "context_17.md",
+        "weight": 0.111,
+        "shared": [
+          "context",
+          "summary"
+        ]
+      },
+      {
+        "source": "context_13.md",
+        "target": "context_14.md",
+        "weight": 0.176,
+        "shared": [
+          "context",
+          "summary",
+          "memory"
+        ]
+      },
+      {
+        "source": "context_13.md",
+        "target": "context_15.md",
+        "weight": 0.818,
+        "shared": [
+          "context",
+          "summary",
+          "recovered",
+          "compressed",
+          "after"
+        ]
+      },
+      {
+        "source": "context_13.md",
+        "target": "context_16.md",
+        "weight": 0.818,
+        "shared": [
+          "context",
+          "summary",
+          "recovered",
+          "compressed",
+          "after"
+        ]
+      },
+      {
+        "source": "context_13.md",
+        "target": "context_17.md",
+        "weight": 0.176,
+        "shared": [
+          "context",
+          "summary",
+          "memory"
+        ]
+      },
+      {
+        "source": "context_13.md",
+        "target": "context_24.md",
+        "weight": 0.111,
+        "shared": [
+          "context",
+          "memory"
+        ]
+      },
+      {
+        "source": "context_13.md",
+        "target": "context_28.md",
+        "weight": 0.111,
+        "shared": [
+          "context",
+          "memory"
+        ]
+      },
+      {
+        "source": "context_14.md",
+        "target": "context_15.md",
+        "weight": 0.111,
+        "shared": [
+          "context",
+          "summary"
+        ]
+      },
+      {
+        "source": "context_14.md",
+        "target": "context_16.md",
+        "weight": 0.111,
+        "shared": [
+          "context",
+          "summary"
+        ]
+      },
+      {
+        "source": "context_14.md",
+        "target": "context_17.md",
+        "weight": 0.25,
+        "shared": [
+          "serial",
+          "memory",
+          "context",
+          "summary"
+        ]
+      },
+      {
+        "source": "context_14.md",
+        "target": "context_24.md",
+        "weight": 0.111,
+        "shared": [
+          "memory",
+          "context"
+        ]
+      },
+      {
+        "source": "context_14.md",
+        "target": "context_28.md",
+        "weight": 0.111,
+        "shared": [
+          "memory",
+          "context"
+        ]
+      },
+      {
+        "source": "context_15.md",
+        "target": "context_16.md",
+        "weight": 1,
+        "shared": [
+          "memory-reference",
+          "context",
+          "summary",
+          "recovered",
+          "compressed"
+        ]
+      },
+      {
+        "source": "context_15.md",
+        "target": "context_17.md",
+        "weight": 0.111,
+        "shared": [
+          "context",
+          "summary"
+        ]
+      },
+      {
+        "source": "context_15.md",
+        "target": "context_26.md",
+        "weight": 0.78,
+        "shared": [
+          "memory-reference"
+        ]
+      },
+      {
+        "source": "context_16.md",
+        "target": "context_17.md",
+        "weight": 0.111,
+        "shared": [
+          "context",
+          "summary"
+        ]
+      },
+      {
+        "source": "context_16.md",
+        "target": "context_26.md",
+        "weight": 0.78,
+        "shared": [
+          "memory-reference"
+        ]
+      },
+      {
+        "source": "context_17.md",
+        "target": "context_24.md",
+        "weight": 0.111,
+        "shared": [
+          "memory",
+          "context"
+        ]
+      },
+      {
+        "source": "context_17.md",
+        "target": "context_28.md",
+        "weight": 0.111,
+        "shared": [
+          "memory",
+          "context"
+        ]
+      },
+      {
+        "source": "context_18.md",
+        "target": "context_19.md",
+        "weight": 0.78,
+        "shared": [
+          "memory-reference",
+          "visual",
+          "tema"
+        ]
+      },
+      {
+        "source": "context_18.md",
+        "target": "context_27.md",
+        "weight": 0.78,
+        "shared": [
+          "memory-reference"
+        ]
+      },
+      {
+        "source": "context_18.md",
+        "target": "context_28.md",
+        "weight": 0.78,
+        "shared": [
+          "memory-reference"
+        ]
+      },
+      {
+        "source": "context_19.md",
+        "target": "context_27.md",
+        "weight": 0.78,
+        "shared": [
+          "memory-reference"
+        ]
+      },
+      {
+        "source": "context_19.md",
+        "target": "context_28.md",
+        "weight": 0.78,
+        "shared": [
+          "memory-reference"
+        ]
+      },
+      {
+        "source": "context_20.md",
+        "target": "context_21.md",
+        "weight": 0.78,
+        "shared": [
+          "memory-reference",
+          "wireguard"
+        ]
+      },
+      {
+        "source": "context_20.md",
+        "target": "context_22.md",
+        "weight": 0.78,
+        "shared": [
+          "memory-reference",
+          "vpn"
+        ]
+      },
+      {
+        "source": "context_20.md",
+        "target": "context_23.md",
+        "weight": 0.176,
+        "shared": [
+          "api",
+          "wireguard",
+          "vpn"
+        ]
+      },
+      {
+        "source": "context_21.md",
+        "target": "context_22.md",
+        "weight": 0.78,
+        "shared": [
+          "memory-reference",
+          "runtime"
+        ]
+      },
+      {
+        "source": "context_22.md",
+        "target": "context_23.md",
+        "weight": 0.111,
+        "shared": [
+          "railway",
+          "vpn"
+        ]
+      },
+      {
+        "source": "context_22.md",
+        "target": "context_24.md",
+        "weight": 0.111,
+        "shared": [
+          "context",
+          "startup"
+        ]
+      },
+      {
+        "source": "context_22.md",
+        "target": "context_25.md",
+        "weight": 0.111,
+        "shared": [
+          "now",
+          "startup"
+        ]
+      },
+      {
+        "source": "context_22.md",
+        "target": "context_27.md",
+        "weight": 0.111,
+        "shared": [
+          "context",
+          "startup"
+        ]
+      },
+      {
+        "source": "context_22.md",
+        "target": "context_28.md",
+        "weight": 0.111,
+        "shared": [
+          "context",
+          "startup"
+        ]
+      },
+      {
+        "source": "context_24.md",
+        "target": "context_25.md",
+        "weight": 0.176,
+        "shared": [
+          "gui",
+          "startup",
+          "boot"
+        ]
+      },
+      {
+        "source": "context_24.md",
+        "target": "context_27.md",
+        "weight": 0.25,
+        "shared": [
+          "context",
+          "startup",
+          "graph",
+          "loading"
+        ]
+      },
+      {
+        "source": "context_24.md",
+        "target": "context_28.md",
+        "weight": 0.25,
+        "shared": [
+          "context",
+          "startup",
+          "memory",
+          "loading"
+        ]
+      },
+      {
+        "source": "context_24.md",
+        "target": "context_29.md",
+        "weight": 0.111,
+        "shared": [
+          "gui",
+          "was"
+        ]
+      },
+      {
+        "source": "context_27.md",
+        "target": "context_28.md",
+        "weight": 0.78,
+        "shared": [
+          "memory-reference",
+          "context",
+          "startup",
+          "loading"
+        ]
+      }
+    ]
+  },
+  "updatedAt": "2026-05-08T00:28:29.684Z",
+  "signature": "b01fba5ce3592f72ad11775b48d26d2b539aad5f90564c2b465a29258ce0fff3",
+  "contextCount": 29
+}

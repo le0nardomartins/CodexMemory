@@ -1,0 +1,23 @@
+{
+  "decisions": [
+    {
+      "id": "dec_0cbabdef9432",
+      "key": "always_evaluate_library_size_maintenance_status_community_support_security_before_adoption",
+      "text": "Always evaluate library size, maintenance status, community support, and security before adoption",
+      "area": "ARCHITECTURE_AND_DESIGN",
+      "polarity": 1,
+      "confidence": 0.6200000000000001,
+      "sources": [
+        "context_2.md"
+      ],
+      "status": "active",
+      "createdAt": "2026-05-08T00:19:12.070Z",
+      "updatedAt": "2026-05-08T00:28:29.662Z",
+      "lastSeenAt": "2026-05-08T00:28:29.662Z",
+      "supersededAt": "",
+      "supersededBySource": "",
+      "supersededByDecisionId": ""
+    }
+  ],
+  "updatedAt": "2026-05-08T00:28:29.662Z"
+}

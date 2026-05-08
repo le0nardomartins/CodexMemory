@@ -7,7 +7,7 @@ This document describes internal architecture, runtime behavior, data flow, and 
 ## Runtime Components
 
 1. `server.js`  
-   Local HTTP server, Ollama orchestration, context loading, memory consolidation, and graph generation.
+   Local HTTP server, engine orchestration (`ollama` or `algorithm`), on-demand memory consolidation, and graph snapshot serving.
 
 2. `GUI/`  
    Browser client for operational control, context editing, memory viewing, and graph rendering.
@@ -28,7 +28,8 @@ Electron launches the app window and points it to the local GUI server.
 ### GUI Mode
 
 Entry point: `node server.js --mode gui`  
-Runs HTTP API and static GUI assets without Electron.
+Runs HTTP API and static GUI assets without Electron.  
+Startup is non-blocking: GUI mode does not run consolidation at boot and does not auto-start the internal daemon.
 
 ### Daemon Mode
 
@@ -41,7 +42,7 @@ Use `--once` for a single update pass.
 ### Context Inputs
 
 Path: `memory_voult/context/context_*.md`  
-Each file is an input memory source. The server reads all matching files and builds a consolidation payload.
+Each file is an input memory source. Files are loaded during consolidation (daemon/manual sync/force), not during GUI startup.
 
 ### Prompt Source
 
@@ -53,20 +54,42 @@ Loaded on each consolidation call and used as the system prompt basis for Ollama
 Path: `memory_voult/AGENT_MEMORY.md`  
 Generated from context content plus prompt rules. Header preservation logic keeps stable top metadata and avoids rewriting user managed header sections when possible.
 
+### Memory State Files
+
+1. `memory_voult/.context_state.json`  
+Stores context hashes plus per-context quality metrics used by incremental consolidation and traceability.
+
+2. `memory_voult/.canonical_state.json`  
+Stores canonical decisions, confidence, source links, and superseded decision lineage.
+
+3. `memory_voult/.neuron_graph_snapshot.json`  
+Stores the latest computed graph payload so GUI can render neurons quickly without rebuilding from all contexts at startup.
+
+4. `memory_voult/snapshots/AGENT_MEMORY_*.md`  
+Versioned memory snapshots with rolling retention (latest 10).
+
+5. `memory_voult/.compressed_context_state.json`  
+Legacy state file kept for compatibility. Context compression workflow is currently disabled.
+
 ## Consolidation Pipeline
 
-1. Read context files and normalize text.
-2. Read `OLLAMA_PROMPT.md`.
-3. Build system prompt and user payload for the model.
-4. Call Ollama generate API.
-5. Sanitize model output to remove forbidden self referential content and placeholders.
+1. Trigger from daemon tick, manual sync, or force-memory endpoint.
+2. Read context files and normalize text.
+3. Resolve memory engine (`MEMORY_ENGINE=ollama` or `MEMORY_ENGINE=algorithm`).
+4. If `ollama`: read `OLLAMA_PROMPT.md`, build model payload, and call Ollama API.
+5. If `algorithm`: run deterministic semantic classification and summarization pipeline.
 6. Merge with preserved memory header.
 7. Write final `AGENT_MEMORY.md`.
-8. Refresh graph state for GUI consumers.
+8. Persist graph snapshot for GUI consumers.
 
 ## Graph Engine
 
 Graph endpoint: `GET /api/graph`
+
+Read path:
+
+1. Return persisted graph from `.neuron_graph_snapshot.json` when available.
+2. If snapshot is missing, rebuild from contexts + memory and persist snapshot.
 
 Node creation rules:
 
@@ -81,10 +104,10 @@ Edge creation rules:
 
 Frontend simulation characteristics:
 
-1. Orbital movement around node home positions
-2. Local repulsion and damping
-3. Synapse flow animation with moving particles
-4. Hover tooltip with context name and reference count
+1. Foundation neuron fixed at center and visually scaled up
+2. Area-based zoning with normalized fallback area for unknown assignments
+3. High-range zoom/pan navigation for dense graphs
+4. Hover tooltip with context name, reference count, and area
 
 ## API Surface
 
@@ -134,14 +157,15 @@ The localization scope is the interface only. Memory content remains controlled 
 
 ## Configuration
 
-1. `OLLAMA_MODEL`
-2. `OLLAMA_HOST`
-3. `OLLAMA_TIMEOUT_SEC`
-4. `OLLAMA_CONTEXT_MAX_CHARS_PER_FILE`
-5. `OLLAMA_CONTEXT_MAX_TOTAL_CHARS`
-6. `DAEMON_REFRESH_SEC`
-7. `GUI_HOST`
-8. `GUI_PORT`
+1. `MEMORY_ENGINE`
+2. `OLLAMA_MODEL`
+3. `OLLAMA_HOST`
+4. `OLLAMA_TIMEOUT_SEC`
+5. `OLLAMA_CONTEXT_MAX_CHARS_PER_FILE`
+6. `OLLAMA_CONTEXT_MAX_TOTAL_CHARS`
+7. `DAEMON_REFRESH_SEC`
+8. `GUI_HOST`
+9. `GUI_PORT`
 
 ## Development Workflow
 

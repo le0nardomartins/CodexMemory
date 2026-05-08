@@ -216,7 +216,7 @@ button:disabled {
 
 .layout {
   display: grid;
-  grid-template-columns: minmax(320px, 420px) 1fr;
+  grid-template-columns: minmax(280px, 360px) 1fr;
   gap: 10px;
   padding: 0;
   min-height: 0;
@@ -323,7 +323,7 @@ textarea {
 }
 
 .void-panel {
-  min-height: 0;
+  min-height: 640px;
   border: 1px solid var(--border);
   border-radius: 16px;
   overflow: hidden;
@@ -356,6 +356,35 @@ textarea {
   width: 100%;
   height: 100%;
   display: block;
+}
+
+.void-canvas-wrap {
+  position: relative;
+  min-height: 0;
+}
+
+.canvas-floating-btn {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 25;
+  min-height: 36px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(147, 209, 255, 0.45);
+  background: rgba(5, 16, 34, 0.78);
+  color: #dbeeff;
+  font-size: 0.82rem;
+  line-height: 1.1;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  backdrop-filter: blur(4px);
+  cursor: pointer;
+}
+
+.canvas-floating-btn:hover {
+  border-color: rgba(174, 227, 255, 0.9);
+  background: rgba(8, 26, 52, 0.88);
 }
 
 .node-tooltip {
@@ -413,6 +442,6 @@ textarea {
   }
 
   .void-panel {
-    min-height: 300px;
+    min-height: 420px;
   }
 }
