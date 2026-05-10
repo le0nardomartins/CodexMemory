@@ -11,3 +11,5 @@ This preference should guide future UI work to maintain brand consistency and av
 
 ## Possible future usage
 Use as a default design constraint for future frontend tasks: prioritizes stronger visual hierarchy, refined gradients/surfaces, and polished mobile-first composition.
+## Foundation Reference
+- Cross-reference: context_1.md (foundation context).

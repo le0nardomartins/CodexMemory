@@ -18,6 +18,7 @@ const CONTEXT_COMPRESSION_TRIGGER_COUNT = 20;
 const MEMORY_SNAPSHOT_KEEP_COUNT = 10;
 const CANONICAL_DECISION_UPDATE_MIN_CONFIDENCE = 0.72;
 const AI_PATHS_CONFIG_RELATIVE = path.join("config", "ai_paths.json");
+const FOUNDATION_CONTEXT_FILE = "context_1.md";
 const BRAIN_AREAS = [
   {
     name: "REQUIREMENT_UNDERSTANDING",
@@ -83,14 +84,6 @@ class TerminalUI {
   error(stage, message) {
     this.info(`${stage} ERROR`, message);
   }
-}
-
-function formatDateAndTimeLine() {
-  const now = new Date();
-  const pad = (v) => String(v).padStart(2, "0");
-  const date = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
-  const time = `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
-  return `${date} | ${time}`;
 }
 
 async function ensureDir(dirPath) {
@@ -1925,18 +1918,27 @@ class AgentMemoryCoordinator {
   resolveMemoryHeader(previousMemoryText) {
     const marker = "## Consolidated Summary";
     const normalized = String(previousMemoryText || "").replace(/\r\n/g, "\n");
+    const legacyTimestampRx = /^\d{4}-\d{2}-\d{2}\s+\|\s+\d{2}:\d{2}:\d{2}$/;
     const idx = normalized.indexOf(marker);
     if (idx >= 0) {
       const beforeMarker = normalized.slice(0, idx);
       const cleanedBefore = beforeMarker
         .split("\n")
-        .filter((line) => !/^single role:/i.test(String(line).trim()))
+        .filter((line) => {
+          const trimmed = String(line).trim();
+          if (!trimmed) return true;
+          if (/^single role:/i.test(trimmed)) return false;
+          if (legacyTimestampRx.test(trimmed)) return false;
+          return true;
+        })
         .join("\n")
         .trimEnd();
+      if (!cleanedBefore) {
+        return ["# AGENT MEMORY", "", marker].join("\n");
+      }
       return `${cleanedBefore}\n\n${marker}`;
     }
     return [
-      formatDateAndTimeLine(),
       "# AGENT MEMORY",
       "",
       marker,
@@ -2477,6 +2479,73 @@ function pairKey(a, b) {
   return [a, b].sort((x, y) => String(x).localeCompare(String(y))).join("::");
 }
 
+function isFoundationContextId(value) {
+  return String(value || "").trim().toLowerCase() === FOUNDATION_CONTEXT_FILE;
+}
+
+function ensureFoundationNode(nodes, assignments = new Map()) {
+  const list = Array.isArray(nodes) ? nodes : [];
+  const existing = list.find((node) => isFoundationContextId(node && node.id));
+  if (existing) return existing;
+
+  const assignment = assignments.get(FOUNDATION_CONTEXT_FILE) || {
+    area: "PROJECT_MEMORY",
+    subarea: "foundation",
+  };
+  const node = {
+    id: FOUNDATION_CONTEXT_FILE,
+    label: FOUNDATION_CONTEXT_FILE,
+    name: FOUNDATION_CONTEXT_FILE,
+    relativePath: `memory_voult/context/${FOUNDATION_CONTEXT_FILE}`.replace(/\\/g, "/"),
+    area: String(assignment.area || "PROJECT_MEMORY").trim().toUpperCase().replace(/\s+/g, "_"),
+    subarea: String(assignment.subarea || "foundation").trim(),
+    archived: false,
+    tokenCount: 220,
+    keywords: ["foundation", "core-memory"],
+    keywordSet: new Set(["foundation", "core-memory"]),
+    textNorm: "",
+    mentionPatterns: buildContextMentionPatterns(FOUNDATION_CONTEXT_FILE),
+  };
+  list.push(node);
+  return node;
+}
+
+function ensureMandatoryFoundationLinks(nodes, links) {
+  const nodeList = Array.isArray(nodes) ? nodes : [];
+  const linkList = Array.isArray(links) ? links : [];
+  const foundationNode = nodeList.find((node) => isFoundationContextId(node && node.id));
+  if (!foundationNode) return linkList;
+
+  const foundationId = foundationNode.id;
+  const existingPairs = new Set();
+  for (const link of linkList) {
+    if (!link || !link.source || !link.target) continue;
+    const key = pairKey(link.source, link.target);
+    existingPairs.add(key);
+    const touchesFoundation = isFoundationContextId(link.source) || isFoundationContextId(link.target);
+    if (!touchesFoundation) continue;
+    if (!Array.isArray(link.shared)) {
+      link.shared = ["foundation-anchor"];
+    } else if (!link.shared.includes("foundation-anchor")) {
+      link.shared.unshift("foundation-anchor");
+    }
+  }
+
+  for (const node of nodeList) {
+    if (!node || !node.id || isFoundationContextId(node.id)) continue;
+    const key = pairKey(node.id, foundationId);
+    if (existingPairs.has(key)) continue;
+    linkList.push({
+      source: foundationId,
+      target: node.id,
+      weight: 0.92,
+      shared: ["foundation-anchor"],
+    });
+    existingPairs.add(key);
+  }
+  return linkList;
+}
+
 function buildMemoryCoMentionPairs(nodes, memoryText) {
   const pairs = new Set();
   const normalized = String(memoryText || "").replace(/\r\n/g, "\n").toLowerCase();
@@ -2572,7 +2641,7 @@ function buildGraphFromMemoryOnly(memoryText = "", knownContextNames = []) {
   }
 
   // Foundation neuron must always exist in graph persistence view.
-  names.add("context_1.md");
+  names.add(FOUNDATION_CONTEXT_FILE);
 
   const nodeSeeds = [...names]
     .filter((name) => /\.md$/i.test(name))
@@ -2595,6 +2664,7 @@ function buildGraphFromMemoryOnly(memoryText = "", knownContextNames = []) {
         mentionPatterns: buildContextMentionPatterns(name),
       };
     });
+  ensureFoundationNode(nodeSeeds, assignments);
 
   const memoryPairs = buildMemoryCoMentionPairs(nodeSeeds, memoryText);
   const links = [];
@@ -2608,6 +2678,7 @@ function buildGraphFromMemoryOnly(memoryText = "", knownContextNames = []) {
       shared: ["memory-reference"],
     });
   }
+  const anchoredLinks = ensureMandatoryFoundationLinks(nodeSeeds, links);
 
   return {
     nodes: nodeSeeds.map((n) => ({
@@ -2621,7 +2692,7 @@ function buildGraphFromMemoryOnly(memoryText = "", knownContextNames = []) {
       keywords: n.keywords,
       radius: 18,
     })),
-    links,
+    links: anchoredLinks,
   };
 }
 
@@ -2659,6 +2730,7 @@ function buildGraphFromContexts(contextItems, memoryText = "") {
       mentionPatterns: buildContextMentionPatterns(item.name),
     };
   });
+  ensureFoundationNode(nodes, assignments);
 
   const links = [];
   const memoryPairs = buildMemoryCoMentionPairs(nodes, memoryText);
@@ -2697,6 +2769,7 @@ function buildGraphFromContexts(contextItems, memoryText = "") {
       }
     }
   }
+  const anchoredLinks = ensureMandatoryFoundationLinks(nodes, links);
 
   return {
     nodes: nodes.map((n) => ({
@@ -2710,7 +2783,7 @@ function buildGraphFromContexts(contextItems, memoryText = "") {
       keywords: n.keywords,
       radius: Math.max(12, Math.min(34, 12 + Math.floor(Math.sqrt(Math.max(1, n.tokenCount))))),
     })),
-    links,
+    links: anchoredLinks,
   };
 }
 

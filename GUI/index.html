@@ -67,7 +67,14 @@
 
         <section class="void-panel">
           <div class="void-header">
-            <h2 id="neuralTitle">Rede Neural</h2>
+            <div class="void-header-top">
+              <h2 id="neuralTitle">Rede Neural</h2>
+              <label class="area-switch" for="toggleAreaLabels">
+                <input id="toggleAreaLabels" type="checkbox" checked />
+                <span class="slider" aria-hidden="true"></span>
+                <span id="toggleAreaLabelsText">Mostrar Areas</span>
+              </label>
+            </div>
           </div>
           <div class="void-canvas-wrap">
             <canvas id="voidCanvas"></canvas>

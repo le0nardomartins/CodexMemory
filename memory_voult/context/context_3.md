@@ -11,3 +11,5 @@ This is a recurring product-quality bar that affects architecture, security, per
 
 ## Possible future usage
 Use as a baseline acceptance checklist before final delivery: security controls, performance optimizations, onboarding reliability, mobile-first UX quality, complete docs (README/Swagger), and secret-safety verification.
+## Foundation Reference
+- Cross-reference: context_1.md (foundation context).

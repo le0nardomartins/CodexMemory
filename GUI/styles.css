@@ -341,8 +341,15 @@ textarea {
   border-bottom: 1px solid var(--border);
 }
 
+.void-header-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
 .void-header h2 {
-  margin: 0 0 6px;
+  margin: 0;
 }
 
 .void-header p {
@@ -350,6 +357,60 @@ textarea {
   color: var(--muted);
   font-size: 0.9rem;
   text-transform: lowercase;
+}
+
+.area-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.8rem;
+  color: #cde6ff;
+  cursor: pointer;
+  user-select: none;
+}
+
+.area-switch input {
+  position: absolute;
+  opacity: 0;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+.area-switch .slider {
+  width: 34px;
+  height: 20px;
+  border-radius: 999px;
+  background: rgba(125, 155, 190, 0.38);
+  border: 1px solid rgba(125, 170, 210, 0.52);
+  position: relative;
+  transition: background 0.18s ease;
+}
+
+.area-switch .slider::after {
+  content: "";
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  background: #d9edff;
+  box-shadow: 0 1px 7px rgba(0, 0, 0, 0.35);
+  transition: transform 0.18s ease;
+}
+
+.area-switch input:checked + .slider {
+  background: rgba(100, 190, 255, 0.56);
+}
+
+.area-switch input:checked + .slider::after {
+  transform: translateX(14px);
+}
+
+.area-switch input:focus-visible + .slider {
+  outline: 2px solid rgba(168, 225, 255, 0.75);
+  outline-offset: 2px;
 }
 
 #voidCanvas {
@@ -443,5 +504,10 @@ textarea {
 
   .void-panel {
     min-height: 420px;
+  }
+
+  .void-header-top {
+    flex-wrap: wrap;
+    align-items: flex-start;
   }
 }

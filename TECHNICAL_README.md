@@ -52,7 +52,7 @@ Loaded on each consolidation call and used as the system prompt basis for Ollama
 ### Consolidated Output
 
 Path: `memory_voult/AGENT_MEMORY.md`  
-Generated from context content plus prompt rules. Header preservation logic keeps stable top metadata and avoids rewriting user managed header sections when possible.
+Generated from context content plus prompt rules. Header preservation logic keeps stable top metadata, enforces `# AGENT MEMORY`, and does not include a timestamp line at the top.
 
 ### Memory State Files
 
@@ -78,7 +78,7 @@ Legacy state file kept for compatibility. Context compression workflow is curren
 3. Resolve memory engine (`MEMORY_ENGINE=ollama` or `MEMORY_ENGINE=algorithm`).
 4. If `ollama`: read `OLLAMA_PROMPT.md`, build model payload, and call Ollama API.
 5. If `algorithm`: run deterministic semantic classification and summarization pipeline.
-6. Merge with preserved memory header.
+6. Merge with preserved memory header and strip legacy timestamp lines if present.
 7. Write final `AGENT_MEMORY.md`.
 8. Persist graph snapshot for GUI consumers.
 

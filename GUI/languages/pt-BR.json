@@ -15,6 +15,7 @@
   "title.contextEditor": "Editor de Contexto",
   "title.agentMemory": "Agent Memory",
   "title.neural": "Rede Neural",
+  "toggle.areaLabels": "Mostrar Areas",
   "label.noneSelected": "nenhum selecionado",
   "label.modelUnknown": "Modelo: -",
   "label.model": "Modelo: {model}",

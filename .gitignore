@@ -58,3 +58,7 @@ memory_voult/AGENT_MEMORY.md
 memory_voult/context/*.md
 memory_voult/.sync_state.json
 memory_voult/.context_state.json
+memory_voult/snapshots/
+desktop_boot.log
+canonical_state.json
+neuron_graph_snapshot.json

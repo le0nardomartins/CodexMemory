@@ -28,3 +28,5 @@ This ensures that systems remain efficient, maintainable, and scalable while avo
 - Codebase refactoring standards
 - Performance review checklist
 - Dependency management policies
+## Foundation Reference
+- Cross-reference: context_1.md (foundation context).

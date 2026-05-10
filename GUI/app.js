@@ -21,6 +21,7 @@ const ui = {
   ollamaModel: document.getElementById("ollamaModel"),
   daemonBadge: document.getElementById("daemonBadge"),
   lastAction: document.getElementById("lastAction"),
+  toggleAreaLabelsText: document.getElementById("toggleAreaLabelsText"),
 };
 
 const controls = {
@@ -34,6 +35,7 @@ const controls = {
   saveContext: document.getElementById("saveContext"),
   refreshMemoryView: document.getElementById("refreshMemoryView"),
   centerFoundationBtn: document.getElementById("centerFoundationBtn"),
+  toggleAreaLabels: document.getElementById("toggleAreaLabels"),
 };
 
 const ctx = ui.canvas.getContext("2d");
@@ -52,6 +54,8 @@ const AREA_PALETTES = {
 };
 const DEFAULT_AREA_CODE = "INCREMENTAL_LEARNING";
 const FOUNDATION_VISUAL_SCALE = 5;
+const NEURON_VISUAL_SCALE = 2.82;
+const AREA_LABEL_VISIBILITY_KEY = "codexmemory.show_area_labels";
 const KNOWN_AREA_CODES = new Set([
   "REQUIREMENT_UNDERSTANDING",
   "PROJECT_MEMORY",
@@ -85,6 +89,14 @@ let memoryRequestInFlight = false;
 let daemonStatusInitialized = false;
 let lastDaemonRunAtSeen = "";
 const GRAPH_CACHE_KEY = "codexmemory.neuron_graph.v1";
+let showAreaLabels = true;
+
+try {
+  const savedVisibility = localStorage.getItem(AREA_LABEL_VISIBILITY_KEY);
+  if (savedVisibility === "0") showAreaLabels = false;
+} catch {
+  // noop
+}
 
 function clamp(v, min, max) {
   return Math.min(max, Math.max(min, v));
@@ -175,17 +187,24 @@ function buildZoneSlots(count, centerX, centerY, radius, seed = 1) {
   if (count <= 0) return [];
   const slots = [];
   const rnd = createSeededRandom(seed);
-  const inner = radius * 0.18;
-  const outer = radius * 0.88;
-  const minDist = clamp(radius * 0.42, 68, 132);
+  const densityFactor = clamp(Math.sqrt(count) / 5.5, 0.72, 1.42);
+  const inner = radius * (0.03 + rnd() * 0.1);
+  const outer = radius * (0.98 + rnd() * 0.14);
+  const minDistBase = clamp(radius * (0.3 + densityFactor * 0.16), 74, 190);
 
   let tries = 0;
-  while (slots.length < count && tries < count * 250) {
+  while (slots.length < count && tries < count * 560) {
     tries += 1;
-    const angle = rnd() * Math.PI * 2;
-    const r = inner + (outer - inner) * Math.sqrt(rnd());
+    const angle = rnd() * Math.PI * 2 + Math.sin((tries + seed) * 0.17) * 0.18;
+    const r = inner + (outer - inner) * Math.pow(rnd(), 0.74);
     const x = centerX + Math.cos(angle) * r;
     const y = centerY + Math.sin(angle) * r;
+    const relaxation = tries > count * 420
+      ? 0.78
+      : tries > count * 280
+        ? 0.88
+        : 1;
+    const minDist = minDistBase * relaxation;
     let ok = true;
     for (const s of slots) {
       if (Math.hypot(x - s.x, y - s.y) < minDist) {
@@ -198,7 +217,7 @@ function buildZoneSlots(count, centerX, centerY, radius, seed = 1) {
 
   while (slots.length < count) {
     const angle = rnd() * Math.PI * 2;
-    const r = inner + (outer - inner) * Math.sqrt(rnd());
+    const r = inner + (outer - inner) * Math.pow(rnd(), 0.74);
     slots.push({
       x: centerX + Math.cos(angle) * r,
       y: centerY + Math.sin(angle) * r,
@@ -218,19 +237,26 @@ function buildAreaZones(nodes, centerX, centerY, worldW, worldH, padding) {
   if (!areas.length) return [];
 
   const minWorld = Math.min(worldW, worldH);
-  const zoneRadius = clamp(minWorld * 0.13, 130, 240);
-  const orbitBase = clamp(minWorld * 0.53, 540, 1700);
-  const centralExclusion = clamp(minWorld * 0.4, 360, 760);
+  const zoneRadiusBase = clamp(minWorld * 0.128, 138, 292);
+  const orbitBase = clamp(minWorld * 0.47, 520, 1680);
+  const centralExclusion = clamp(minWorld * 0.24, 300, 740);
+  const pairGap = clamp(minWorld * 0.045, 120, 260);
+  const ringSeed = hashString(areas.join("|"));
+  const phaseOffset = ((ringSeed % 997) / 996) * Math.PI * 2;
   const zones = [];
+
   for (let i = 0; i < areas.length; i += 1) {
     const area = areas[i];
+    const areaNodes = grouped.get(area) || [];
     const seed = hashString(`${area}:${i}`);
     const rnd = createSeededRandom(seed);
-    const angleBase = (i / areas.length) * Math.PI * 2 - Math.PI / 2;
-    const angle = angleBase + (rnd() - 0.5) * 0.5;
-    const radius = orbitBase * (0.9 + (rnd() - 0.5) * 0.24);
-    let x = centerX + Math.cos(angle) * radius;
-    let y = centerY + Math.sin(angle) * radius;
+    const nodeScale = clamp(0.9 + Math.log2(Math.max(2, areaNodes.length + 1)) * 0.18, 0.88, 1.3);
+    const zoneRadius = clamp(zoneRadiusBase * nodeScale * (0.9 + rnd() * 0.18), 128, 330);
+    const angleBase = phaseOffset + (i / areas.length) * Math.PI * 2;
+    const angle = angleBase + (rnd() - 0.5) * 0.42;
+    const orbit = orbitBase * (0.93 + (rnd() - 0.5) * 0.2);
+    let x = centerX + Math.cos(angle) * orbit;
+    let y = centerY + Math.sin(angle) * orbit;
     x = clamp(x, padding + zoneRadius, worldW - padding - zoneRadius);
     y = clamp(y, padding + zoneRadius, worldH - padding - zoneRadius);
 
@@ -250,12 +276,12 @@ function buildAreaZones(nodes, centerX, centerY, worldW, worldH, padding) {
       centerX: x,
       centerY: y,
       radius: zoneRadius,
-      nodes: grouped.get(area) || [],
+      nodes: areaNodes,
       seed,
     });
   }
 
-  for (let step = 0; step < 28; step += 1) {
+  for (let step = 0; step < 46; step += 1) {
     for (let i = 0; i < zones.length; i += 1) {
       const a = zones[i];
       for (let j = i + 1; j < zones.length; j += 1) {
@@ -263,9 +289,9 @@ function buildAreaZones(nodes, centerX, centerY, worldW, worldH, padding) {
         const dx = b.centerX - a.centerX;
         const dy = b.centerY - a.centerY;
         const dist = Math.hypot(dx, dy) || 1;
-        const minDist = a.radius + b.radius + 140;
+        const minDist = a.radius + b.radius + pairGap;
         if (dist >= minDist) continue;
-        const push = (minDist - dist) * 0.075;
+        const push = (minDist - dist) * 0.11;
         const ux = dx / dist;
         const uy = dy / dist;
         a.centerX -= ux * push;
@@ -276,10 +302,16 @@ function buildAreaZones(nodes, centerX, centerY, worldW, worldH, padding) {
       const toCx = a.centerX - centerX;
       const toCy = a.centerY - centerY;
       const d = Math.hypot(toCx, toCy) || 1;
-      if (d < centralExclusion + a.radius) {
-        const k = (centralExclusion + a.radius) / d;
+      const minOrbit = centralExclusion + a.radius * 0.68;
+      const maxOrbit = orbitBase * 1.18 + a.radius * 0.52;
+      if (d < minOrbit) {
+        const k = minOrbit / d;
         a.centerX = centerX + toCx * k;
         a.centerY = centerY + toCy * k;
+      } else if (d > maxOrbit) {
+        const pull = (d - maxOrbit) * 0.085;
+        a.centerX -= (toCx / d) * pull;
+        a.centerY -= (toCy / d) * pull;
       }
       a.centerX = clamp(a.centerX, padding + a.radius, worldW - padding - a.radius);
       a.centerY = clamp(a.centerY, padding + a.radius, worldH - padding - a.radius);
@@ -353,6 +385,7 @@ function applyStaticI18n() {
     ["refreshMemoryView", "button.refresh"],
     ["centerFoundationBtn", "button.centerFoundation"],
     ["neuralTitle", "title.neural"],
+    ["toggleAreaLabelsText", "toggle.areaLabels"],
     ["ollamaText", "status.ollamaChecking"],
     ["ollamaModel", "label.modelUnknown"],
   ];
@@ -781,7 +814,7 @@ function findHoveredNode(screenX, screenY) {
     const dist = Math.hypot(worldPt.x - node.x, worldPt.y - node.y);
     const hoverRadius = isFoundationNode(node)
       ? node.radius * 3.2 * FOUNDATION_VISUAL_SCALE
-      : node.radius * 1.8;
+      : node.radius * Math.max(1.8, NEURON_VISUAL_SCALE * 1.04);
     if (dist <= hoverRadius && dist < bestDist) {
       best = node;
       bestDist = dist;
@@ -822,6 +855,84 @@ function tickSimulation() {
   }
 }
 
+function drawRoundedRectPath(x, y, width, height, radius) {
+  const r = Math.max(0, Math.min(radius, width * 0.5, height * 0.5));
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.lineTo(x + width - r, y);
+  ctx.quadraticCurveTo(x + width, y, x + width, y + r);
+  ctx.lineTo(x + width, y + height - r);
+  ctx.quadraticCurveTo(x + width, y + height, x + width - r, y + height);
+  ctx.lineTo(x + r, y + height);
+  ctx.quadraticCurveTo(x, y + height, x, y + height - r);
+  ctx.lineTo(x, y + r);
+  ctx.quadraticCurveTo(x, y, x + r, y);
+  ctx.closePath();
+}
+
+function buildAreaLabelLayouts(zones, centerX, centerY, fontPx, padX, padY) {
+  const layouts = [];
+  const safeZones = Array.isArray(zones) ? zones : [];
+  for (let i = 0; i < safeZones.length; i += 1) {
+    const zone = safeZones[i];
+    const label = areaLabel(zone.area);
+    const dx = zone.centerX - centerX;
+    const dy = zone.centerY - centerY;
+    const dist = Math.hypot(dx, dy);
+    const angle = dist > 0.001
+      ? Math.atan2(dy, dx)
+      : ((i / Math.max(1, safeZones.length)) * Math.PI * 2) - Math.PI * 0.5;
+    const ux = Math.cos(angle);
+    const uy = Math.sin(angle);
+    const radialOffset = zone.radius + 28 / camera.zoom;
+    let x = zone.centerX + ux * radialOffset;
+    let y = zone.centerY + uy * radialOffset;
+    const width = Math.max(70 / camera.zoom, ctx.measureText(label).width + padX * 2);
+    const height = fontPx + padY * 2;
+    x = clamp(x, world.padding + width * 0.5, world.width - world.padding - width * 0.5);
+    y = clamp(y, world.padding + height * 0.5, world.height - world.padding - height * 0.5);
+    layouts.push({
+      text: label,
+      x,
+      y,
+      width,
+      height,
+    });
+  }
+
+  for (let pass = 0; pass < 14; pass += 1) {
+    for (let i = 0; i < layouts.length; i += 1) {
+      const a = layouts[i];
+      for (let j = i + 1; j < layouts.length; j += 1) {
+        const b = layouts[j];
+        const dx = b.x - a.x;
+        const dy = b.y - a.y;
+        const overlapX = (a.width + b.width) * 0.5 - Math.abs(dx);
+        const overlapY = (a.height + b.height) * 0.5 - Math.abs(dy);
+        if (overlapX <= 0 || overlapY <= 0) continue;
+        const pushY = (overlapY + 2 / camera.zoom) * 0.5;
+        const dir = dy >= 0 ? 1 : -1;
+        a.y -= dir * pushY;
+        b.y += dir * pushY;
+      }
+    }
+    for (const item of layouts) {
+      item.x = clamp(
+        item.x,
+        world.padding + item.width * 0.5,
+        world.width - world.padding - item.width * 0.5,
+      );
+      item.y = clamp(
+        item.y,
+        world.padding + item.height * 0.5,
+        world.height - world.padding - item.height * 0.5,
+      );
+    }
+  }
+
+  return layouts;
+}
+
 function drawSimulation() {
   const w = ui.canvas.clientWidth;
   const h = ui.canvas.clientHeight;
@@ -860,34 +971,15 @@ function drawSimulation() {
 
   const nodeById = new Map(sim.nodes.map((n) => [n.id, n]));
 
-  // Zonas visuais por area para leitura clara da arquitetura cerebral.
-  if (Array.isArray(sim.areaZones)) {
-    for (const zone of sim.areaZones) {
-      const zx = zone.centerX;
-      const zy = zone.centerY;
-      const zr = zone.radius;
-      if (!isCircleVisible(zx, zy, zr + 40 / camera.zoom)) continue;
-      const label = areaLabel(zone.area);
-      const labelOutside = zy > world.height * 0.55
-        ? zy + zr + 16 / camera.zoom
-        : zy - zr - 18 / camera.zoom;
-      const labelY = labelOutside;
-      ctx.fillStyle = "rgba(190, 225, 255, 0.75)";
-      ctx.font = `${Math.max(9, Math.round(12 / camera.zoom))}px Segoe UI`;
-      ctx.textAlign = "center";
-      ctx.textBaseline = "middle";
-      ctx.fillText(label, zx, labelY);
-    }
-  }
-
   for (const link of sim.links) {
     const a = nodeById.get(link.source);
     const b = nodeById.get(link.target);
     if (!a || !b) continue;
     if (!isSegmentVisible(a.x, a.y, b.x, b.y)) continue;
+    const isFoundationAnchor = Array.isArray(link.shared) && link.shared.includes("foundation-anchor");
     const weight = clamp(Number(link.weight) || 0, 0, 1.4);
-    const alpha = 0.58;
-    const lineWidthPx = 1.65;
+    const alpha = isFoundationAnchor ? 0.42 : 0.58;
+    const lineWidthPx = isFoundationAnchor ? 0.88 : 1.16;
     ctx.strokeStyle = `rgba(255,255,255,${alpha})`;
     // Mantem espessura minima visivel e maxima controlada na tela.
     ctx.lineWidth = lineWidthPx / camera.zoom;
@@ -897,12 +989,12 @@ function drawSimulation() {
     ctx.stroke();
 
     // Fluxo linear de "informacao" percorrendo a sinapse
-    const beads = 2;
+    const beads = isFoundationAnchor ? 1 : 2;
     for (let i = 0; i < beads; i += 1) {
       const t = (flowTick * (0.42 + (link.weight || 0) * 0.33) + i * 0.48) % 1;
       const px = a.x + (b.x - a.x) * t;
       const py = a.y + (b.y - a.y) * t;
-      const radius = (1.8 + (link.weight || 0) * 1.1) / camera.zoom;
+      const radius = ((isFoundationAnchor ? 1.3 : 1.8) + (link.weight || 0) * 1.1) / camera.zoom;
       const beadAlpha = 0.38 + (1 - Math.abs(0.5 - t) * 1.6) * 0.34;
       ctx.fillStyle = `rgba(157,247,229,${Math.max(0.2, beadAlpha)})`;
       ctx.beginPath();
@@ -926,7 +1018,9 @@ function drawSimulation() {
       const delta = ((((mixHue - finalHue) % 360) + 540) % 360) - 180;
       finalHue = (finalHue + delta * blend + 360) % 360;
     }
-    const coreBase = foundation ? node.radius * 3.35 * FOUNDATION_VISUAL_SCALE : node.radius * 1.52;
+    const coreBase = foundation
+      ? node.radius * 3.35 * FOUNDATION_VISUAL_SCALE
+      : node.radius * NEURON_VISUAL_SCALE;
     const coreRadius = Math.max(8, coreBase);
 
     const glowRadius = coreRadius * (foundation ? 2.95 : 1.7 + node.glowBias * 0.5);
@@ -953,6 +1047,38 @@ function drawSimulation() {
     ctx.beginPath();
     ctx.arc(node.x, node.y, coreRadius, 0, Math.PI * 2);
     ctx.fill();
+  }
+
+  // Draw labels last so they are never hidden behind neurons or links.
+  if (showAreaLabels) {
+    const labelFontPx = Math.max(10, Math.round(12 / camera.zoom));
+    const labelPadX = 9 / camera.zoom;
+    const labelPadY = 5 / camera.zoom;
+    ctx.font = `600 ${labelFontPx}px Segoe UI`;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+
+    const labelLayouts = buildAreaLabelLayouts(
+      sim.areaZones,
+      world.width * 0.5,
+      world.height * 0.5,
+      labelFontPx,
+      labelPadX,
+      labelPadY,
+    );
+    for (const item of labelLayouts) {
+      if (!isCircleVisible(item.x, item.y, Math.max(item.width, item.height))) continue;
+      const x = item.x - item.width * 0.5;
+      const y = item.y - item.height * 0.5;
+      drawRoundedRectPath(x, y, item.width, item.height, 8 / camera.zoom);
+      ctx.fillStyle = "rgba(8, 20, 48, 0.72)";
+      ctx.fill();
+      ctx.strokeStyle = "rgba(124, 186, 238, 0.62)";
+      ctx.lineWidth = 0.9 / camera.zoom;
+      ctx.stroke();
+      ctx.fillStyle = "rgba(207, 232, 255, 0.96)";
+      ctx.fillText(item.text, item.x, item.y + 0.2 / camera.zoom);
+    }
   }
 
   ctx.restore();
@@ -1185,6 +1311,17 @@ function bindEvents() {
   controls.saveContext.addEventListener("click", () => saveSelectedContext().catch(alertError));
   controls.refreshMemoryView.addEventListener("click", () => loadMemory().catch(alertError));
   controls.centerFoundationBtn.addEventListener("click", () => centerCameraOnFoundation(0.8));
+  if (controls.toggleAreaLabels) {
+    controls.toggleAreaLabels.checked = showAreaLabels;
+    controls.toggleAreaLabels.addEventListener("change", () => {
+      showAreaLabels = Boolean(controls.toggleAreaLabels.checked);
+      try {
+        localStorage.setItem(AREA_LABEL_VISIBILITY_KEY, showAreaLabels ? "1" : "0");
+      } catch {
+        // noop
+      }
+    });
+  }
 
   bindCanvasCameraControls();
 

@@ -11,3 +11,5 @@ This is a direct visual direction constraint that should guide future palette, g
 
 ## Possible future usage
 Apply this as a default UI rule in future frontend edits: avoid oversaturated blue backgrounds, favor balanced green + muted blue accents, and keep a polished, premium sports identity.
+## Foundation Reference
+- Cross-reference: context_1.md (foundation context).
