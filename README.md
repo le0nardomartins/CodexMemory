@@ -8,6 +8,13 @@
 Open source memory orchestration for context driven coding workflows.
 </p>
 
+<p align="center">
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-Source%20Available-orange" alt="License: Source Available" /></a>
+  <img src="https://img.shields.io/badge/node-%3E%3D18-brightgreen" alt="Node.js 18+" />
+  <img src="https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%7C%20Mac-blue" alt="Platform" />
+  <img src="https://img.shields.io/badge/engine-Ollama%20%7C%20Algorithm-purple" alt="Engine" />
+</p>
+
 <!-- Language selector — GitHub renders static content, so pick your language below -->
 <p align="center">
   🌐 &nbsp;
@@ -162,12 +169,24 @@ npm run test:memory
 | `GET` | `/api/memory` | Read consolidated memory |
 | `GET` | `/api/graph` | Neuron graph |
 
-## Open Source Notes
+## Platform Support
 
-1. Clear code boundaries between GUI, server, and desktop runtime
-2. No hidden remote services required for core workflow
-3. Local first behavior by default
-4. Community friendly markdown based context model
+**Windows** — fully supported via `npm start`, `setup_codex_memory.bat`, and the PowerShell scripts in `scripts/`.
+
+**Linux / Mac** — run the server directly with Node.js:
+
+```bash
+node server.js --mode gui
+node server.js --mode daemon --refresh-sec 300
+```
+
+The Electron desktop mode and the `.bat`/`.ps1` autostart scripts are Windows-only. All core features (GUI, daemon, API, memory consolidation) work on any platform that runs Node.js 18+.
+
+---
+
+## License
+
+Source available — free for non-commercial use with attribution. Commercial use requires prior written permission from the author. See [LICENSE](LICENSE) for full terms.
 
 ---
 
