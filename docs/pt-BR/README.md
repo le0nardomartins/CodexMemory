@@ -107,10 +107,3 @@ Para detalhes de arquitetura e implementação, leia [TECHNICAL.md](TECHNICAL.md
 ```powershell
 npm run test:memory
 ```
-
-## Notas Open Source
-
-1. Fronteiras claras de código entre GUI, servidor e runtime desktop
-2. Nenhum serviço remoto oculto necessário para o fluxo principal
-3. Comportamento local-first por padrão
-4. Modelo de contexto baseado em Markdown amigável à comunidade

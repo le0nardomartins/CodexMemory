@@ -107,10 +107,3 @@ For architecture and implementation details, read [TECHNICAL.md](TECHNICAL.md).
 ```powershell
 npm run test:memory
 ```
-
-## Open Source Notes
-
-1. Clear code boundaries between GUI, server, and desktop runtime
-2. No hidden remote services required for core workflow
-3. Local first behavior by default
-4. Community friendly markdown based context model
