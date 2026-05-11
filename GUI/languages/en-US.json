@@ -52,5 +52,6 @@
   "busy.force": "Forcing...",
   "tooltip.references": "{name} | references: {count}",
   "placeholder.contextEditor": "Context content...",
-  "placeholder.memoryViewer": "Loading consolidated memory..."
+  "placeholder.memoryViewer": "Loading consolidated memory...",
+  "notice.contextRefresh": "Contexts are only reloaded when a context is added or removed, or when AGENT_MEMORY generation is forced."
 }

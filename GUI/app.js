@@ -476,6 +476,7 @@ function applyStaticI18n() {
     ["contextsTitle",      "title.contexts"],
     ["newContext",         "button.newContext"],
     ["refreshContexts",    "button.refreshList"],
+    ["contextRefreshNotice", "notice.contextRefresh"],
     ["contextEditorTitle", "title.contextEditor"],
     ["currentContext",     "label.noneSelected"],
     ["saveContext",        "button.save"],
