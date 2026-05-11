@@ -114,49 +114,6 @@ One time run:
 node server.js --mode daemon --once
 ```
 
-## Project Structure
-
-```text
-CodexMemory/
-  electron/
-    main.js
-  GUI/
-    index.html
-    app.js
-    styles.css
-    config.json          ← neural network visual configuration
-    languages/
-  languages/
-    en-US.json
-    pt-BR.json
-    es-ES.json
-  memory_voult/
-    AGENT_MEMORY.md
-    .context_state.json
-    .canonical_state.json
-    .neuron_graph_snapshot.json
-    snapshots/
-    context/
-      context_*.md
-  assets/
-  scripts/
-  docs/
-    pt-BR/
-      README.md
-      INSTALL.md
-      TECHNICAL.md
-    en-US/
-      README.md
-      INSTALL.md
-      TECHNICAL.md
-    es-ES/
-      README.md
-      INSTALL.md
-      TECHNICAL.md
-  server.js
-  setup_codex_memory.bat
-```
-
 ## Environment Variables
 
 | Variable | Default | Description |
@@ -213,5 +170,3 @@ npm run test:memory
 | 🇧🇷 Português | [docs/pt-BR/README.md](docs/pt-BR/README.md) | [INSTALL.md](docs/pt-BR/INSTALL.md) | [TECHNICAL.md](docs/pt-BR/TECHNICAL.md) |
 | 🇺🇸 English | [docs/en-US/README.md](docs/en-US/README.md) | [INSTALL.md](docs/en-US/INSTALL.md) | [TECHNICAL.md](docs/en-US/TECHNICAL.md) |
 | 🇪🇸 Español | [docs/es-ES/README.md](docs/es-ES/README.md) | [INSTALL.md](docs/es-ES/INSTALL.md) | [TECHNICAL.md](docs/es-ES/TECHNICAL.md) |
-
-> **Note about automatic language routing:** GitHub renders repository READMEs as static HTML, so it is not possible to serve different content automatically based on browser locale. The language selector above is the closest supported alternative. If you host this project on GitHub Pages, a JavaScript redirect based on `navigator.language` can be added to `index.html` to automatically send visitors to the correct language folder.

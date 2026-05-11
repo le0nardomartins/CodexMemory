@@ -60,40 +60,6 @@ Por que isso importa:
 3. Outros contextos devem referenciá-lo para que a ligação algorítmica preserve uma espinha dorsal de memória consistente.
 4. Manter este arquivo curado por humanos reduz desvios e evita perda acidental da intenção central do projeto.
 
-## Estrutura do Projeto
-
-```text
-CodexMemory/
-  electron/
-    main.js
-  GUI/
-    index.html
-    app.js
-    styles.css
-    config.json          ← configuração visual da rede neural
-    languages/
-  languages/
-    en-US.json
-    pt-BR.json
-    es-ES.json
-  memory_voult/
-    AGENT_MEMORY.md
-    .context_state.json
-    .canonical_state.json
-    .neuron_graph_snapshot.json
-    snapshots/
-    context/
-      context_*.md
-  assets/
-  scripts/
-  docs/
-    pt-BR/
-    en-US/
-    es-ES/
-  server.js
-  setup_codex_memory.bat
-```
-
 ## Variáveis de Ambiente
 
 | Variável | Padrão | Descrição |

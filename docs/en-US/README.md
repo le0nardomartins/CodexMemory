@@ -60,40 +60,6 @@ Why this matters:
 3. Other contexts should reference it so algorithmic linking can preserve a consistent memory backbone.
 4. Keeping this file human-curated reduces drift and prevents accidental loss of core project intent.
 
-## Project Structure
-
-```text
-CodexMemory/
-  electron/
-    main.js
-  GUI/
-    index.html
-    app.js
-    styles.css
-    config.json          ← neural network visual configuration
-    languages/
-  languages/
-    en-US.json
-    pt-BR.json
-    es-ES.json
-  memory_voult/
-    AGENT_MEMORY.md
-    .context_state.json
-    .canonical_state.json
-    .neuron_graph_snapshot.json
-    snapshots/
-    context/
-      context_*.md
-  assets/
-  scripts/
-  docs/
-    pt-BR/
-    en-US/
-    es-ES/
-  server.js
-  setup_codex_memory.bat
-```
-
 ## Environment Variables
 
 | Variable | Default | Description |
