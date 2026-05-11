@@ -17,7 +17,10 @@
 
   "area": {
     "_doc_radiusScale": "Multiplier for the base radius of each brain area zone. Higher values expand all zones uniformly. Default: 2.6",
-    "radiusScale": 2.6
+    "radiusScale": 2.6,
+
+    "_doc_toneSpread": "Hue diversity within each area. 0 = all neurons share the exact base tone of the area; 1 = full palette range (~50°); values above 1 stretch beyond the palette bounds. Default: 2.0",
+    "toneSpread": 2.0
   },
 
   "idle": {

@@ -71,6 +71,7 @@ let CONFIG = {
   },
   area: {
     radiusScale: 1.0,      // multiplicador do raio base de cada zona cerebral
+    toneSpread:  1.0,      // 0 = tom base uniforme; 1 = range completo (~50°); >1 = mais além
   },
   idle: {
     enabled: true,         // liga/desliga animação idle (exceto fundamento)
@@ -98,15 +99,17 @@ const world = { width: 1880, height: 1180, padding: 92 };
 const FOUNDATION_CONTEXT_FILE = "context_1.md";
 
 // Paleta de matiz HSL por área de memória: [hue_min, hue_max]
+// Cada range cobre ~50 graus para que neurônios da mesma área tenham tons
+// claramente distintos entre si — o min e max delimitam a família de cor da área.
 const AREA_PALETTES = {
-  REQUIREMENT_UNDERSTANDING: [204, 220],
-  PROJECT_MEMORY:            [258, 276],
-  ARCHITECTURE_AND_DESIGN:   [34, 48],
-  CODE_REASONING:            [330, 346],
-  QUALITY_AND_SECURITY:      [146, 164],
-  EXECUTION_AND_TOOLING:     [14, 28],
-  INCREMENTAL_LEARNING:      [286, 300],
-  UNASSIGNED:                [210, 226],
+  REQUIREMENT_UNDERSTANDING: [192, 248],  // azul (56°)
+  PROJECT_MEMORY:            [250, 300],  // índigo/roxo (50°)
+  ARCHITECTURE_AND_DESIGN:   [28,  82],   // laranja-amarelo (54°)
+  CODE_REASONING:            [314, 358],  // carmim/vermelho (44°)
+  QUALITY_AND_SECURITY:      [116, 172],  // verde (56°)
+  EXECUTION_AND_TOOLING:     [10,  58],   // vermelho-laranja (48°)
+  INCREMENTAL_LEARNING:      [82,  130],  // verde-limão/ciano (48°)
+  UNASSIGNED:                [200, 252],  // azul-ciano (52°)
 };
 
 // Área padrão para contextos sem atribuição no grafo
@@ -240,14 +243,24 @@ function createSeededRandom(seed) {
   };
 }
 
-// Interpola o matiz HSL de um nó dentro da paleta da sua área
+// Calcula o matiz HSL de um nó dentro da paleta da sua área.
+//
+// CONFIG.area.toneSpread controla a diversidade de tom:
+//   0   → todos os neurônios da área recebem exatamente o tom central (mid)
+//   1   → usa o range completo da paleta (~50°)
+//   >1  → espalha além dos limites da paleta (mais contraste ainda)
+//
+// O mix é centrado em zero ([-0.5, 0.5)) para que toneSpread=0 sempre
+// retorne mid independente do seed.
 function areaHue(area, seed = 0) {
-  const key = normalizeAreaForGraph(area);
+  const key     = normalizeAreaForGraph(area);
   const palette = AREA_PALETTES[key] || AREA_PALETTES.UNASSIGNED;
-  const base = palette[0];
-  const alt  = palette[1];
-  const mix  = ((seed % 997) / 996) * 0.6 + 0.2;
-  return base + (alt - base) * mix;
+  const base    = palette[0];
+  const alt     = palette[1];
+  const mid     = (base + alt) * 0.5;                   // tom central da área
+  const mix     = (seed % 997) / 996 - 0.5;             // [-0.5, 0.5) — centrado
+  const spread  = CONFIG.area.toneSpread;
+  return mid + (alt - base) * spread * mix;
 }
 
 // =============================================================================
@@ -1594,6 +1607,7 @@ async function loadConfig() {
     }
     if (json.area && typeof json.area === "object") {
       if (typeof json.area.radiusScale === "number") CONFIG.area.radiusScale = json.area.radiusScale;
+      if (typeof json.area.toneSpread  === "number") CONFIG.area.toneSpread  = json.area.toneSpread;
     }
     if (json.idle && typeof json.idle === "object") {
       if (typeof json.idle.enabled       === "boolean") CONFIG.idle.enabled       = json.idle.enabled;

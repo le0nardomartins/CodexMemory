@@ -17,6 +17,14 @@ Orquestração de memória open source para fluxos de trabalho de programação 
 
 ---
 
+<p align="center">
+  <img src="../../assets/example.png" alt="Codex Memory — grafo neural com contexto real" width="860" />
+  <br/>
+  <sub>Grafo neural com conteúdo de contexto real — cada nó é um arquivo de contexto, cada família de cor é uma área de memória.</sub>
+</p>
+
+---
+
 ## Visão Geral
 
 O Codex Memory é um serviço de memória local que lê arquivos de contexto em Markdown, consolida memória operacional de longo prazo com um motor selecionável (`ollama` ou `algorithm` determinístico), e expõe uma interface visual para inspecionar relações entre contextos.

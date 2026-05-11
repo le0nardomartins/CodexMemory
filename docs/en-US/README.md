@@ -17,6 +17,14 @@ Open source memory orchestration for context driven coding workflows.
 
 ---
 
+<p align="center">
+  <img src="../../assets/example.png" alt="Codex Memory — neural graph with populated context" width="860" />
+  <br/>
+  <sub>Neural graph with real context content — each node is a context file, each color family is a memory area.</sub>
+</p>
+
+---
+
 ## Overview
 
 Codex Memory is a local memory service that reads markdown contexts, consolidates long term operational memory with a selectable engine (`ollama` or deterministic `algorithm`), and exposes a visual interface to inspect memory relationships.
