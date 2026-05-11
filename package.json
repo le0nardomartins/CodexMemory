@@ -1,6 +1,6 @@
 {
   "name": "codexmemory",
-  "version": "2.0.0",
+  "version": "1.0.0",
   "private": true,
   "description": "Desktop memory server + daemon + GUI for CodexMemory",
   "main": "electron/main.js",
