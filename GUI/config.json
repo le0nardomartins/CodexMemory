@@ -8,24 +8,29 @@
     "_doc_normalScale": "Multiplicador de tamanho dos neurônios normais em relação ao raio base. Valor padrão: 2.82",
     "normalScale": 2.82,
 
-    "_doc_minSpacing": "Distância mínima (world units) entre neurônios dentro de uma zona de área — Poisson-disk sampling. Valor padrão: 74",
-    "minSpacing": 74,
+    "_doc_minSpacing": "Distância mínima (world units) entre neurônios dentro de uma zona de área — Poisson-disk sampling. Valor padrão: 200",
+    "minSpacing": 200,
 
-    "_doc_maxSpacing": "Distância máxima (world units) entre neurônios dentro de uma zona de área. Valor padrão: 190",
-    "maxSpacing": 190
+    "_doc_maxSpacing": "Distância máxima (world units) entre neurônios dentro de uma zona de área. Valor padrão: 600",
+    "maxSpacing": 600
+  },
+
+  "area": {
+    "_doc_radiusScale": "Multiplicador do raio base de cada zona de área cerebral. 2.6 = tamanho padrão; valores maiores expandem todas as zonas uniformemente. Valor padrão: 2.6",
+    "radiusScale": 2.6
   },
 
   "idle": {
     "_doc_enabled": "Liga (true) ou desliga (false) a animação idle dos neurônios. O fundamento nunca oscila independente deste valor.",
     "enabled": true,
 
-    "_doc_tickSpeed": "Incremento de flowTick por frame — controla velocidade geral de todas as animações (sinapses, idle, fluxo). Valor padrão: 0.018",
-    "tickSpeed": 0.018,
+    "_doc_tickSpeed": "Incremento de flowTick por frame — controla velocidade geral de todas as animações (sinapses, idle, fluxo). Valor padrão: 0.02",
+    "tickSpeed": 0.03,
 
-    "_doc_freqVariation": "Variação máxima de frequência de oscilação entre neurônios. 0 = todos oscilam na mesma velocidade; 1 = variação de 100%. Valor padrão: 0.6",
-    "freqVariation": 0.6,
+    "_doc_freqVariation": "Variação máxima de frequência de oscilação entre neurônios. 0 = todos oscilam na mesma velocidade; 1 = variação de 100%. Valor padrão: 1.0",
+    "freqVariation": 1.0,
 
-    "_doc_yRatio": "Razão entre a frequência vertical e horizontal do idle. Valores diferentes de 1.0 produzem trajetórias elípticas (figura de Lissajous). Valor padrão: 0.71",
-    "yRatio": 0.71
+    "_doc_yRatio": "Razão entre a frequência vertical e horizontal do idle. Valores diferentes de 1.0 produzem trajetórias elípticas (figura de Lissajous). Valor padrão: 1.0",
+    "yRatio": 1.0
   }
 }

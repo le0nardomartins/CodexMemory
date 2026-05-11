@@ -16,6 +16,7 @@
   "title.agentMemory": "Memoria del Agente",
   "title.neural": "Red Neural",
   "toggle.areaLabels": "Mostrar Áreas",
+  "toggle.areaOutlines": "Mostrar Contornos",
   "label.noneSelected": "ninguno seleccionado",
   "label.modelUnknown": "Modelo: -",
   "label.model": "Modelo: {model}",

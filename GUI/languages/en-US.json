@@ -16,6 +16,7 @@
   "title.agentMemory": "Agent Memory",
   "title.neural": "Neural Network",
   "toggle.areaLabels": "Show Areas",
+  "toggle.areaOutlines": "Show Outlines",
   "label.noneSelected": "none selected",
   "label.modelUnknown": "Model: -",
   "label.model": "Model: {model}",

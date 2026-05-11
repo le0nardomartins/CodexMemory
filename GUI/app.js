@@ -49,7 +49,8 @@ const controls = {
   saveContext:       document.getElementById("saveContext"),
   refreshMemoryView: document.getElementById("refreshMemoryView"),
   centerFoundationBtn: document.getElementById("centerFoundationBtn"),
-  toggleAreaLabels:  document.getElementById("toggleAreaLabels"),
+  toggleAreaLabels:   document.getElementById("toggleAreaLabels"),
+  toggleAreaOutlines: document.getElementById("toggleAreaOutlines"),
 };
 
 // Contexto 2D do canvas neural — único ponto de desenho
@@ -67,6 +68,9 @@ let CONFIG = {
     normalScale: 2.82,     // tamanho relativo dos neurônios normais
     minSpacing: 74,        // distância mínima entre neurônios numa zona (world units)
     maxSpacing: 190,       // distância máxima entre neurônios numa zona (world units)
+  },
+  area: {
+    radiusScale: 1.0,      // multiplicador do raio base de cada zona cerebral
   },
   idle: {
     enabled: true,         // liga/desliga animação idle (exceto fundamento)
@@ -109,7 +113,9 @@ const AREA_PALETTES = {
 const DEFAULT_AREA_CODE = "INCREMENTAL_LEARNING";
 
 // Chave de preferência salva no localStorage para visibilidade dos rótulos
-const AREA_LABEL_VISIBILITY_KEY = "codexmemory.show_area_labels";
+const AREA_LABEL_VISIBILITY_KEY   = "codexmemory.show_area_labels";
+// Chave de preferência para visibilidade dos contornos de zona
+const AREA_OUTLINE_VISIBILITY_KEY = "codexmemory.show_area_outlines";
 
 // Conjunto de áreas válidas para normalização de strings vindas do servidor
 const KNOWN_AREA_CODES = new Set([
@@ -167,6 +173,15 @@ try {
   if (savedVisibility === "0") showAreaLabels = false;
 } catch {
   // localStorage indisponível em modo privativo ou origem restrita — usa default
+}
+
+// Visibilidade dos contornos de zona — persistida no localStorage
+let showAreaOutlines = false;
+try {
+  const savedOutlines = localStorage.getItem(AREA_OUTLINE_VISIBILITY_KEY);
+  if (savedOutlines === "1") showAreaOutlines = true;
+} catch {
+  // noop
 }
 
 // =============================================================================
@@ -333,7 +348,8 @@ function buildAreaZones(nodes, centerX, centerY, worldW, worldH, padding) {
   if (!areas.length) return [];
 
   const minWorld        = Math.min(worldW, worldH);
-  const zoneRadiusBase  = clamp(minWorld * 0.128, 138, 292);
+  const radiusScale     = Math.max(0.1, CONFIG.area.radiusScale);
+  const zoneRadiusBase  = clamp(minWorld * 0.128, 138, 292) * radiusScale;
   const orbitBase       = clamp(minWorld * 0.47, 520, 1680);
   // Nenhuma zona invade o espaço reservado ao neurônio fundamento
   const centralExclusion = clamp(minWorld * 0.24, 300, 740);
@@ -348,7 +364,7 @@ function buildAreaZones(nodes, centerX, centerY, worldW, worldH, padding) {
     const seed      = hashString(`${area}:${i}`);
     const rnd       = createSeededRandom(seed);
     const nodeScale = clamp(0.9 + Math.log2(Math.max(2, areaNodes.length + 1)) * 0.18, 0.88, 1.3);
-    const zoneRadius = clamp(zoneRadiusBase * nodeScale * (0.9 + rnd() * 0.18), 128, 330);
+    const zoneRadius = clamp(zoneRadiusBase * nodeScale * (0.9 + rnd() * 0.18), 128 * radiusScale, 330 * radiusScale);
     const angleBase  = phaseOffset + (i / areas.length) * Math.PI * 2;
     const angle      = angleBase + (rnd() - 0.5) * 0.42;
     const orbit      = orbitBase * (0.93 + (rnd() - 0.5) * 0.2);
@@ -484,7 +500,8 @@ function applyStaticI18n() {
     ["refreshMemoryView",  "button.refresh"],
     ["centerFoundationBtn","button.centerFoundation"],
     ["neuralTitle",        "title.neural"],
-    ["toggleAreaLabelsText","toggle.areaLabels"],
+    ["toggleAreaLabelsText",   "toggle.areaLabels"],
+    ["toggleAreaOutlinesText", "toggle.areaOutlines"],
     ["ollamaText",         "status.ollamaChecking"],
     ["ollamaModel",        "label.modelUnknown"],
   ];
@@ -1145,6 +1162,38 @@ function drawSimulation() {
 
   const nodeById = new Map(sim.nodes.map((n) => [n.id, n]));
 
+  // --- Contornos de zona de área (desenhados sob tudo) ---
+  if (showAreaOutlines) {
+    ctx.save();
+    for (const zone of sim.areaZones) {
+      if (!isCircleVisible(zone.centerX, zone.centerY, zone.radius)) continue;
+      const hue = areaHue(zone.area, hashString(zone.area));
+
+      // Preenchimento radial suave — realça a região da área
+      const grd = ctx.createRadialGradient(
+        zone.centerX, zone.centerY, 0,
+        zone.centerX, zone.centerY, zone.radius,
+      );
+      grd.addColorStop(0,    `hsla(${hue}, 65%, 48%, 0.10)`);
+      grd.addColorStop(0.62, `hsla(${hue}, 60%, 40%, 0.05)`);
+      grd.addColorStop(1,    `hsla(${hue}, 55%, 34%, 0.00)`);
+      ctx.fillStyle = grd;
+      ctx.beginPath();
+      ctx.arc(zone.centerX, zone.centerY, zone.radius, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Contorno tracejado na cor da área
+      ctx.strokeStyle = `hsla(${hue}, 72%, 62%, 0.42)`;
+      ctx.lineWidth   = 1.4 / camera.zoom;
+      ctx.setLineDash([8 / camera.zoom, 5 / camera.zoom]);
+      ctx.beginPath();
+      ctx.arc(zone.centerX, zone.centerY, zone.radius, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.setLineDash([]);
+    }
+    ctx.restore();
+  }
+
   // --- Sinapses (links) ---
   for (const link of sim.links) {
     const a = nodeById.get(link.source);
@@ -1503,6 +1552,18 @@ function bindEvents() {
     });
   }
 
+  if (controls.toggleAreaOutlines) {
+    controls.toggleAreaOutlines.checked = showAreaOutlines;
+    controls.toggleAreaOutlines.addEventListener("change", () => {
+      showAreaOutlines = Boolean(controls.toggleAreaOutlines.checked);
+      try {
+        localStorage.setItem(AREA_OUTLINE_VISIBILITY_KEY, showAreaOutlines ? "1" : "0");
+      } catch {
+        // noop
+      }
+    });
+  }
+
   bindCanvasCameraControls();
   window.addEventListener("resize", resizeCanvas);
 }
@@ -1530,6 +1591,9 @@ async function loadConfig() {
       if (typeof json.neuron.normalScale     === "number") CONFIG.neuron.normalScale     = json.neuron.normalScale;
       if (typeof json.neuron.minSpacing      === "number") CONFIG.neuron.minSpacing      = json.neuron.minSpacing;
       if (typeof json.neuron.maxSpacing      === "number") CONFIG.neuron.maxSpacing      = json.neuron.maxSpacing;
+    }
+    if (json.area && typeof json.area === "object") {
+      if (typeof json.area.radiusScale === "number") CONFIG.area.radiusScale = json.area.radiusScale;
     }
     if (json.idle && typeof json.idle === "object") {
       if (typeof json.idle.enabled       === "boolean") CONFIG.idle.enabled       = json.idle.enabled;
