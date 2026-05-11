@@ -1,17 +1,28 @@
+/* =============================================================================
+   CodexMemory — Folha de estilos principal
+   Paleta escura de tons azul-profundo com acentos ciano/verde.
+   ============================================================================= */
+
+/* ---------------------------------------------------------------------------
+   Variáveis globais de design — altere aqui para repinotar toda a interface
+   --------------------------------------------------------------------------- */
 :root {
-  --bg0: #070a14;
-  --bg1: #091126;
-  --bg2: #101934;
-  --line: rgba(170, 210, 255, 0.28);
-  --node: #7ec8ff;
-  --node-hot: #9df7e5;
-  --text: #d6e8ff;
-  --muted: #8ea7c7;
-  --card: rgba(8, 14, 28, 0.84);
-  --border: rgba(150, 190, 255, 0.18);
-  --app-margin: 12px;
+  --bg0: #070a14;                       /* fundo mais escuro (base do gradiente) */
+  --bg1: #091126;                       /* fundo médio (cards, painel neural)    */
+  --bg2: #101934;                       /* fundo levemente mais claro            */
+  --line: rgba(170, 210, 255, 0.28);   /* cor dos links/bordas sutis            */
+  --node: #7ec8ff;                      /* cor base dos neurônios normais        */
+  --node-hot: #9df7e5;                  /* cor de destaque (hover, bead)         */
+  --text: #d6e8ff;                      /* texto principal                       */
+  --muted: #8ea7c7;                     /* texto secundário / rótulos            */
+  --card: rgba(8, 14, 28, 0.84);       /* fundo semitransparente dos cards      */
+  --border: rgba(150, 190, 255, 0.18); /* borda sutil dos cards e painéis      */
+  --app-margin: 12px;                   /* espaçamento externo da aplicação      */
 }
 
+/* ---------------------------------------------------------------------------
+   Reset e base
+   --------------------------------------------------------------------------- */
 * {
   box-sizing: border-box;
 }
@@ -28,6 +39,9 @@ body {
   overflow: hidden;
 }
 
+/* ---------------------------------------------------------------------------
+   Layout principal — grid de 3 linhas: topbar | status strip | conteúdo
+   --------------------------------------------------------------------------- */
 .app {
   width: 100%;
   height: 100%;
@@ -38,6 +52,9 @@ body {
   overflow: hidden;
 }
 
+/* ---------------------------------------------------------------------------
+   Topbar — cabeçalho com título, badge Ollama e botões de controle do daemon
+   --------------------------------------------------------------------------- */
 .topbar {
   display: flex;
   justify-content: space-between;
@@ -78,6 +95,10 @@ body {
   flex-wrap: wrap;
 }
 
+/* ---------------------------------------------------------------------------
+   Badge de status do Ollama / engine — dot colorido + texto + modelo
+   .ok → verde  |  .warn → amarelo  |  .down → vermelho  |  .loading → pulsante
+   --------------------------------------------------------------------------- */
 .ollama-badge {
   display: flex;
   align-items: center;
@@ -134,6 +155,9 @@ body {
   animation: pulse-dot 1.2s ease-in-out infinite;
 }
 
+/* ---------------------------------------------------------------------------
+   Botões — estilo translúcido azulado com efeito hover de elevação e glow
+   --------------------------------------------------------------------------- */
 button {
   border: 1px solid rgba(155, 210, 255, 0.2);
   background: linear-gradient(180deg, rgba(100, 170, 255, 0.18), rgba(100, 170, 255, 0.08));
@@ -159,6 +183,9 @@ button:active {
   animation: breathe 2.4s ease-in-out infinite;
 }
 
+/* ---------------------------------------------------------------------------
+   Status strip — faixa abaixo do topbar com badge do daemon e última ação
+   --------------------------------------------------------------------------- */
 .status-strip {
   display: flex;
   align-items: center;
@@ -214,6 +241,9 @@ button:disabled {
   box-shadow: none;
 }
 
+/* ---------------------------------------------------------------------------
+   Layout principal — sidebar de contextos à esquerda, painel neural à direita
+   --------------------------------------------------------------------------- */
 .layout {
   display: grid;
   grid-template-columns: minmax(280px, 360px) 1fr;
@@ -322,6 +352,9 @@ textarea {
   scrollbar-color: rgba(126, 200, 255, 0.72) transparent;
 }
 
+/* ---------------------------------------------------------------------------
+   Painel neural — container do canvas com fundo nebular multicamada
+   --------------------------------------------------------------------------- */
 .void-panel {
   min-height: 640px;
   border: 1px solid var(--border);
@@ -359,6 +392,9 @@ textarea {
   text-transform: lowercase;
 }
 
+/* ---------------------------------------------------------------------------
+   Toggle de visibilidade dos rótulos de área — switch customizado CSS puro
+   --------------------------------------------------------------------------- */
 .area-switch {
   display: inline-flex;
   align-items: center;
@@ -448,6 +484,10 @@ textarea {
   background: rgba(8, 26, 52, 0.88);
 }
 
+/* ---------------------------------------------------------------------------
+   Tooltip de neurônio — exibe nome, contagem de referências e área
+   Controlado por JS via classe .visible
+   --------------------------------------------------------------------------- */
 .node-tooltip {
   position: fixed;
   z-index: 30;
@@ -470,6 +510,11 @@ textarea {
   transform: translateY(0);
 }
 
+/* ---------------------------------------------------------------------------
+   Animações CSS
+   breathe    — pulsação suave do botão "Iniciar" (chama atenção sem distrair)
+   pulse-dot  — oscilação do dot do badge Ollama no estado "loading"
+   --------------------------------------------------------------------------- */
 @keyframes breathe {
   0% {
     box-shadow: 0 0 0 rgba(126, 200, 255, 0);
@@ -497,6 +542,9 @@ textarea {
   }
 }
 
+/* ---------------------------------------------------------------------------
+   Responsividade — abaixo de 1100px o layout muda para coluna única
+   --------------------------------------------------------------------------- */
 @media (max-width: 1100px) {
   .layout {
     grid-template-columns: 1fr;

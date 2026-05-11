@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/logo_name.png" alt="Codex Memory logo" width="500" />
+  <img src="../../assets/logo_name.png" alt="Codex Memory logo" width="500" />
 </p>
 
 <h1 align="center">Codex Memory</h1>
@@ -8,14 +8,11 @@
 Open source memory orchestration for context driven coding workflows.
 </p>
 
-<!-- Language selector — GitHub renders static content, so pick your language below -->
 <p align="center">
-  🌐 &nbsp;
-  <a href="docs/pt-BR/README.md"><img src="https://flagcdn.com/20x15/br.png" alt="pt-BR" /> Português</a>
-  &nbsp;·&nbsp;
-  <a href="docs/en-US/README.md"><img src="https://flagcdn.com/20x15/us.png" alt="en-US" /> English</a>
-  &nbsp;·&nbsp;
-  <a href="docs/es-ES/README.md"><img src="https://flagcdn.com/20x15/es.png" alt="es-ES" /> Español</a>
+  🌐
+  <a href="../pt-BR/README.md">Português</a> ·
+  <strong>English</strong> ·
+  <a href="../es-ES/README.md">Español</a>
 </p>
 
 ---
@@ -63,57 +60,6 @@ Why this matters:
 3. Other contexts should reference it so algorithmic linking can preserve a consistent memory backbone.
 4. Keeping this file human-curated reduces drift and prevents accidental loss of core project intent.
 
-## Quick Start
-
-### Requirements
-
-1. Node.js 18+
-2. Ollama installed and available in `PATH` only if you run with `MEMORY_ENGINE=ollama`
-
-### Install
-
-```powershell
-npm install
-```
-
-### Configure Paths Before First Run
-
-```powershell
-copy config\ai_paths.json.example config\ai_paths.json
-```
-
-Edit `config/ai_paths.json` and update `baseRootPath` to your absolute path:
-
-```json
-{
-  "baseRootPath": "C:/Users/your_username/Documents"
-}
-```
-
-### Run Desktop
-
-```powershell
-npm start
-```
-
-### Run Web GUI
-
-```powershell
-node server.js --mode gui
-```
-
-### Run Daemon
-
-```powershell
-node server.js --mode daemon --refresh-sec 300
-```
-
-One time run:
-
-```powershell
-node server.js --mode daemon --once
-```
-
 ## Project Structure
 
 ```text
@@ -142,17 +88,8 @@ CodexMemory/
   scripts/
   docs/
     pt-BR/
-      README.md
-      INSTALL.md
-      TECHNICAL.md
     en-US/
-      README.md
-      INSTALL.md
-      TECHNICAL.md
     es-ES/
-      README.md
-      INSTALL.md
-      TECHNICAL.md
   server.js
   setup_codex_memory.bat
 ```
@@ -173,13 +110,15 @@ CodexMemory/
 
 When `MEMORY_ENGINE=algorithm`, Ollama is not loaded during the session.
 
-## Regression Tests
+## Installation and Setup
 
-```powershell
-npm run test:memory
-```
+See the full guide at [INSTALL.md](INSTALL.md).
 
-## API Summary
+## Technical Documentation
+
+For architecture and implementation details, read [TECHNICAL.md](TECHNICAL.md).
+
+## API
 
 | Method | Route | Description |
 |---|---|---|
@@ -197,21 +136,15 @@ npm run test:memory
 | `GET` | `/api/memory` | Read consolidated memory |
 | `GET` | `/api/graph` | Neuron graph |
 
+## Regression Tests
+
+```powershell
+npm run test:memory
+```
+
 ## Open Source Notes
 
 1. Clear code boundaries between GUI, server, and desktop runtime
 2. No hidden remote services required for core workflow
 3. Local first behavior by default
 4. Community friendly markdown based context model
-
----
-
-## Documentation
-
-| Language | README | Installation | Technical |
-|---|---|---|---|
-| 🇧🇷 Português | [docs/pt-BR/README.md](docs/pt-BR/README.md) | [INSTALL.md](docs/pt-BR/INSTALL.md) | [TECHNICAL.md](docs/pt-BR/TECHNICAL.md) |
-| 🇺🇸 English | [docs/en-US/README.md](docs/en-US/README.md) | [INSTALL.md](docs/en-US/INSTALL.md) | [TECHNICAL.md](docs/en-US/TECHNICAL.md) |
-| 🇪🇸 Español | [docs/es-ES/README.md](docs/es-ES/README.md) | [INSTALL.md](docs/es-ES/INSTALL.md) | [TECHNICAL.md](docs/es-ES/TECHNICAL.md) |
-
-> **Note about automatic language routing:** GitHub renders repository READMEs as static HTML, so it is not possible to serve different content automatically based on browser locale. The language selector above is the closest supported alternative. If you host this project on GitHub Pages, a JavaScript redirect based on `navigator.language` can be added to `index.html` to automatically send visitors to the correct language folder.

@@ -5,14 +5,14 @@
 ## BRAIN AREAS
 
 ### AREA: REQUIREMENT_UNDERSTANDING
-- Neural area layout must stay organic but not chaotic, and area labels must remain readable above graph elements. [src: context_35.md, context_34.md, context_37.md]
-- preserve balanced area distribution and enforce label layering/placement rules so names are never hidden by links or neurons. [src: context_35.md, context_34.md, context_37.md]
-- The file header should start directly with `# AGENT MEMORY`, and consolidation logic should strip legacy timestamp lines when preserving previous headers. [src: context_35.md, context_34.md, context_37.md]
-- AGENT_MEMORY.md must not contain a date/timestamp line above the main title. [src: context_35.md, context_34.md, context_37.md]
-- Ao implementar novos controles Tk/ttk, aplicar imediatamente paleta matte (bg/panel/border escuros), mapear estados hover/active e evitar defaults do sistema que injetam branco (especialmente em Checkbutton). [src: context_35.md, context_34.md, context_37.md]
-- No dashboard Tk do AutoCar-NCC, o usuário reforçou que não quer preto sólido predominante nem elementos brancos residuais. [src: context_35.md, context_34.md, context_37.md]
-- Foundation visual size should remain unchanged while other neurons become more prominent and less artificially clustered. [src: context_35.md, context_34.md, context_37.md]
-- Neural background visualization must avoid rigid geometric area layouts and represent a more organic brain topology. [src: context_35.md, context_34.md, context_37.md]
+- Se o usuário negasse permissão, a mensagem dizia "obrigatório" e não havia caminho alternativo. [src: context_40.md, context_35.md, context_34.md]
+- context_31.md (arquitetura MaisUm), context_32.md (auditoria de segurança) [src: context_40.md, context_35.md, context_34.md]
+- Neural area layout must stay organic but not chaotic, and area labels must remain readable above graph elements. [src: context_40.md, context_35.md, context_34.md]
+- preserve balanced area distribution and enforce label layering/placement rules so names are never hidden by links or neurons. [src: context_40.md, context_35.md, context_34.md]
+- The file header should start directly with `# AGENT MEMORY`, and consolidation logic should strip legacy timestamp lines when preserving previous headers. [src: context_40.md, context_35.md, context_34.md]
+- AGENT_MEMORY.md must not contain a date/timestamp line above the main title. [src: context_40.md, context_35.md, context_34.md]
+- Ao implementar novos controles Tk/ttk, aplicar imediatamente paleta matte (bg/panel/border escuros), mapear estados hover/active e evitar defaults do sistema que injetam branco (especialmente em Checkbutton). [src: context_40.md, context_35.md, context_34.md]
+- No dashboard Tk do AutoCar-NCC, o usuário reforçou que não quer preto sólido predominante nem elementos brancos residuais. [src: context_40.md, context_35.md, context_34.md]
 
 ### AREA: PROJECT_MEMORY
 - Always prioritize production-level security in all decisions [src: context_1.md, context_23.md, context_30.md]
@@ -32,14 +32,14 @@
 - Details [src: context_26.md, context_16.md, context_15.md]
 
 ### AREA: QUALITY_AND_SECURITY
-- usuário em /api/auth/login (role user), administrador em /api/auth/adm/login (role admin) e empresa em /api/companies/login (role company), com proteção de rotas dedicada no frontend (/login, /adm/login, /empresas/login) e middlewares específicos no backend (auth, authAdm, authCompany). [src: context_33.md, context_31.md, context_36.md]
-- há criação pública de empresa via POST /api/companies (não restrita a admin) e não há endpoint dedicado de exclusão de empresa no conjunto /api/adm. [src: context_33.md, context_31.md, context_36.md]
-- Não há diferenciação fina entre planos pagos (qualquer plano não-Free recebe as mesmas permissões atuais). [src: context_33.md, context_31.md, context_36.md]
-- `middlewares/` — auth.js (JWT verify), authAdm, authCompany, validation.js, rateLimiters.js, requestMetrics.js, ensureUserOwnsResource.js [src: context_33.md, context_31.md, context_36.md]
-- `routes/` — /api/auth, /api/auth/adm, /api/events, /api/locations, /api/users, /api/sports, /api/ratings, /api/companies, /api/adm [src: context_33.md, context_31.md, context_36.md]
-- Essa mudanca elimina inconsistencias de autorizacao, fortalece seguranca em recursos pagos, centraliza governanca de empresas no perfil admin e melhora rastreabilidade tecnica por documentacao padrao. [src: context_33.md, context_31.md, context_36.md]
-- integracao de gateway de pagamento, politicas de permissao por tier de plano, auditoria de operacoes administrativas e ampliacao de observabilidade de seguranca. [src: context_33.md, context_31.md, context_36.md]
-- Para evitar referências quebradas, scripts de teste foram atualizados para /api/auth/register e /api/auth/login, e código morto em test_locations.py foi removido. [src: context_33.md, context_31.md, context_36.md]
+- Token válido mas sem role admin → semanticamente deve ser 403 (Forbidden), não 401 (Unauthorized) [src: context_32.md, context_33.md, context_31.md]
+- `companyController.js` emitia apenas access token (24h), sem refresh token [src: context_32.md, context_33.md, context_31.md]
+- usuário em /api/auth/login (role user), administrador em /api/auth/adm/login (role admin) e empresa em /api/companies/login (role company), com proteção de rotas dedicada no frontend (/login, /adm/login, /empresas/login) e middlewares específicos no backend (auth, authAdm, authCompany). [src: context_32.md, context_33.md, context_31.md]
+- há criação pública de empresa via POST /api/companies (não restrita a admin) e não há endpoint dedicado de exclusão de empresa no conjunto /api/adm. [src: context_32.md, context_33.md, context_31.md]
+- Não há diferenciação fina entre planos pagos (qualquer plano não-Free recebe as mesmas permissões atuais). [src: context_32.md, context_33.md, context_31.md]
+- `middlewares/` — auth.js (JWT verify), authAdm, authCompany, validation.js, rateLimiters.js, requestMetrics.js, ensureUserOwnsResource.js [src: context_32.md, context_33.md, context_31.md]
+- `routes/` — /api/auth, /api/auth/adm, /api/events, /api/locations, /api/users, /api/sports, /api/ratings, /api/companies, /api/adm [src: context_32.md, context_33.md, context_31.md]
+- Para evitar referências quebradas, scripts de teste foram atualizados para /api/auth/register e /api/auth/login, e código morto em test_locations.py foi removido. [src: context_32.md, context_33.md, context_31.md]
 
 ### AREA: EXECUTION_AND_TOOLING
 - Environment configuration, security guidance, and full Ubuntu/WireGuard provisioning steps were documented in a technical README, including operational caveats for container platforms where UDP inbound, NET_ADMIN, and TUN access may be required. [src: context_20.md, context_22.md, context_21.md]
@@ -59,19 +59,23 @@
 - Administração de empresas não está completa no domínio admin: há criação pública de empresa via POST /api/companies (não restrita a admin) e não há endpoint dedicado de exclusão de empresa no conjunto /api/adm. [src: context_33.md] (conf: 0.69)
 - Always evaluate library size, maintenance status, community support, and security before adoption [src: context_2.md] (conf: 0.62)
 - Não há diferenciação fina entre planos pagos (qualquer plano não-Free recebe as mesmas permissões atuais). [src: context_33.md] (conf: 0.62)
+- Token válido mas sem role admin → semanticamente deve ser 403 (Forbidden), não 401 (Unauthorized) [src: context_32.md] (conf: 0.62)
+- Problema:** Step 3 do Onboarding exigia `navigator.geolocation`. Se o usuário negasse permissão, a mensagem dizia "obrigatório" e não havia caminho alternativo. [src: context_40.md] (conf: 0.62)
+- Mensagem de erro deixou de dizer "obrigatório" para não confundir. [src: context_40.md] (conf: 0.62)
+- Cross-reference: context_31.md (arquitetura MaisUm), context_32.md (auditoria de segurança) [src: context_40.md] (conf: 0.62)
 
 ## MEMORY CONTRADICTIONS
 - none detected in this refresh
 
 ## TRACEABILITY INDEX
-- REQUIREMENT_UNDERSTANDING#1 => context_35.md, context_34.md, context_37.md
-- REQUIREMENT_UNDERSTANDING#2 => context_35.md, context_34.md, context_37.md
-- REQUIREMENT_UNDERSTANDING#3 => context_35.md, context_34.md, context_37.md
-- REQUIREMENT_UNDERSTANDING#4 => context_35.md, context_34.md, context_37.md
-- REQUIREMENT_UNDERSTANDING#5 => context_35.md, context_34.md, context_37.md
-- REQUIREMENT_UNDERSTANDING#6 => context_35.md, context_34.md, context_37.md
-- REQUIREMENT_UNDERSTANDING#7 => context_35.md, context_34.md, context_37.md
-- REQUIREMENT_UNDERSTANDING#8 => context_35.md, context_34.md, context_37.md
+- REQUIREMENT_UNDERSTANDING#1 => context_40.md, context_35.md, context_34.md
+- REQUIREMENT_UNDERSTANDING#2 => context_40.md, context_35.md, context_34.md
+- REQUIREMENT_UNDERSTANDING#3 => context_40.md, context_35.md, context_34.md
+- REQUIREMENT_UNDERSTANDING#4 => context_40.md, context_35.md, context_34.md
+- REQUIREMENT_UNDERSTANDING#5 => context_40.md, context_35.md, context_34.md
+- REQUIREMENT_UNDERSTANDING#6 => context_40.md, context_35.md, context_34.md
+- REQUIREMENT_UNDERSTANDING#7 => context_40.md, context_35.md, context_34.md
+- REQUIREMENT_UNDERSTANDING#8 => context_40.md, context_35.md, context_34.md
 - PROJECT_MEMORY#1 => context_1.md, context_23.md, context_30.md
 - PROJECT_MEMORY#2 => context_1.md, context_23.md, context_30.md
 - PROJECT_MEMORY#3 => context_1.md, context_23.md, context_30.md
@@ -83,14 +87,14 @@
 - CODE_REASONING#2 => context_26.md, context_16.md, context_15.md
 - CODE_REASONING#3 => context_26.md, context_16.md, context_15.md
 - CODE_REASONING#4 => context_26.md, context_16.md, context_15.md
-- QUALITY_AND_SECURITY#1 => context_33.md, context_31.md, context_36.md
-- QUALITY_AND_SECURITY#2 => context_33.md, context_31.md, context_36.md
-- QUALITY_AND_SECURITY#3 => context_33.md, context_31.md, context_36.md
-- QUALITY_AND_SECURITY#4 => context_33.md, context_31.md, context_36.md
-- QUALITY_AND_SECURITY#5 => context_33.md, context_31.md, context_36.md
-- QUALITY_AND_SECURITY#6 => context_33.md, context_31.md, context_36.md
-- QUALITY_AND_SECURITY#7 => context_33.md, context_31.md, context_36.md
-- QUALITY_AND_SECURITY#8 => context_33.md, context_31.md, context_36.md
+- QUALITY_AND_SECURITY#1 => context_32.md, context_33.md, context_31.md
+- QUALITY_AND_SECURITY#2 => context_32.md, context_33.md, context_31.md
+- QUALITY_AND_SECURITY#3 => context_32.md, context_33.md, context_31.md
+- QUALITY_AND_SECURITY#4 => context_32.md, context_33.md, context_31.md
+- QUALITY_AND_SECURITY#5 => context_32.md, context_33.md, context_31.md
+- QUALITY_AND_SECURITY#6 => context_32.md, context_33.md, context_31.md
+- QUALITY_AND_SECURITY#7 => context_32.md, context_33.md, context_31.md
+- QUALITY_AND_SECURITY#8 => context_32.md, context_33.md, context_31.md
 - EXECUTION_AND_TOOLING#1 => context_20.md, context_22.md, context_21.md
 - EXECUTION_AND_TOOLING#2 => context_20.md, context_22.md, context_21.md
 - EXECUTION_AND_TOOLING#3 => context_20.md, context_22.md, context_21.md
@@ -104,6 +108,10 @@
 - CANON:dec_48d6bc4718a1 => context_33.md
 - CANON:dec_0cbabdef9432 => context_2.md
 - CANON:dec_974671756778 => context_33.md
+- CANON:dec_7423ae846ea3 => context_32.md
+- CANON:dec_c511ac9c18cd => context_40.md
+- CANON:dec_4f82b7c5cf49 => context_40.md
+- CANON:dec_caa05d040e51 => context_40.md
 
 ## CONTEXT ASSIGNMENTS
 - memory_voult/context/context_1.md => PROJECT_MEMORY :: encoding_integrity
@@ -137,7 +145,7 @@
 - memory_voult/context/context_29.md => EXECUTION_AND_TOOLING :: daemon_runtime
 - memory_voult/context/context_30.md => PROJECT_MEMORY :: documentation
 - memory_voult/context/context_31.md => QUALITY_AND_SECURITY :: authentication
-- memory_voult/context/context_32.md => REQUIREMENT_UNDERSTANDING :: visual_direction
+- memory_voult/context/context_32.md => QUALITY_AND_SECURITY :: authentication
 - memory_voult/context/context_33.md => QUALITY_AND_SECURITY :: authentication
 - memory_voult/context/context_34.md => REQUIREMENT_UNDERSTANDING :: visual_direction
 - memory_voult/context/context_35.md => REQUIREMENT_UNDERSTANDING :: visual_direction
@@ -145,6 +153,7 @@
 - memory_voult/context/context_37.md => REQUIREMENT_UNDERSTANDING :: visual_direction
 - memory_voult/context/context_38.md => REQUIREMENT_UNDERSTANDING :: visual_direction
 - memory_voult/context/context_39.md => QUALITY_AND_SECURITY :: authentication
+- memory_voult/context/context_40.md => REQUIREMENT_UNDERSTANDING :: general
 
 ## Processed Context Files
 - memory_voult/context/context_1.md
@@ -186,3 +195,4 @@
 - memory_voult/context/context_37.md
 - memory_voult/context/context_38.md
 - memory_voult/context/context_39.md
+- memory_voult/context/context_40.md

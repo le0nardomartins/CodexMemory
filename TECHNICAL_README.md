@@ -1,5 +1,16 @@
 # Codex Memory Technical README
 
+> This file is the legacy technical reference kept at the root for compatibility.  
+> The maintained per-language technical docs are in [`docs/`](docs/):
+>
+> | Language | Link |
+> |---|---|
+> | 🇧🇷 Português | [docs/pt-BR/TECHNICAL.md](docs/pt-BR/TECHNICAL.md) |
+> | 🇺🇸 English | [docs/en-US/TECHNICAL.md](docs/en-US/TECHNICAL.md) |
+> | 🇪🇸 Español | [docs/es-ES/TECHNICAL.md](docs/es-ES/TECHNICAL.md) |
+
+---
+
 ## Purpose
 
 This document describes internal architecture, runtime behavior, data flow, and extension points for contributors working on Codex Memory.

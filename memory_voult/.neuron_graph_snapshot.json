@@ -687,23 +687,23 @@
         "id": "context_32.md",
         "label": "context_32.md",
         "relativePath": "memory_voult/context/context_32.md",
-        "area": "REQUIREMENT_UNDERSTANDING",
-        "subarea": "visual_direction",
+        "area": "QUALITY_AND_SECURITY",
+        "subarea": "authentication",
         "archived": false,
-        "tokenCount": 109,
+        "tokenCount": 401,
         "keywords": [
-          "foundation",
-          "neural",
-          "area",
-          "context",
-          "avoid",
-          "rigid",
-          "layouts",
-          "more",
-          "organic",
-          "less"
+          "fix",
+          "token",
+          "senha",
+          "bcrypt",
+          "admin",
+          "authmiddleware",
+          "corrigidas",
+          "api",
+          "err",
+          "message"
         ],
-        "radius": 22
+        "radius": 32
       },
       {
         "id": "context_33.md",
@@ -858,6 +858,28 @@
           "duplicado"
         ],
         "radius": 23
+      },
+      {
+        "id": "context_40.md",
+        "label": "context_40.md",
+        "relativePath": "memory_voult/context/context_40.md",
+        "area": "REQUIREMENT_UNDERSTANDING",
+        "subarea": "general",
+        "archived": false,
+        "tokenCount": 346,
+        "keywords": [
+          "terms_accepted",
+          "onboarding",
+          "registro",
+          "usuario",
+          "empresa",
+          "false",
+          "back",
+          "fix",
+          "problema",
+          "solucao"
+        ],
+        "radius": 30
       }
     ],
     "links": [
@@ -1129,15 +1151,6 @@
       {
         "source": "context_1.md",
         "target": "context_31.md",
-        "weight": 0.65,
-        "shared": [
-          "foundation-anchor",
-          "explicit-reference"
-        ]
-      },
-      {
-        "source": "context_1.md",
-        "target": "context_32.md",
         "weight": 0.65,
         "shared": [
           "foundation-anchor",
@@ -1418,15 +1431,6 @@
       },
       {
         "source": "context_5.md",
-        "target": "context_32.md",
-        "weight": 0.111,
-        "shared": [
-          "context",
-          "foundation"
-        ]
-      },
-      {
-        "source": "context_5.md",
         "target": "context_34.md",
         "weight": 0.176,
         "shared": [
@@ -1599,15 +1603,6 @@
           "context",
           "foundation",
           "reference"
-        ]
-      },
-      {
-        "source": "context_6.md",
-        "target": "context_32.md",
-        "weight": 0.111,
-        "shared": [
-          "context",
-          "foundation"
         ]
       },
       {
@@ -2196,15 +2191,6 @@
         ]
       },
       {
-        "source": "context_13.md",
-        "target": "context_32.md",
-        "weight": 0.111,
-        "shared": [
-          "context",
-          "foundation"
-        ]
-      },
-      {
         "source": "context_14.md",
         "target": "context_15.md",
         "weight": 0.111,
@@ -2291,15 +2277,6 @@
       },
       {
         "source": "context_14.md",
-        "target": "context_32.md",
-        "weight": 0.111,
-        "shared": [
-          "context",
-          "foundation"
-        ]
-      },
-      {
-        "source": "context_14.md",
         "target": "context_34.md",
         "weight": 0.111,
         "shared": [
@@ -2372,15 +2349,6 @@
           "context",
           "foundation",
           "reference"
-        ]
-      },
-      {
-        "source": "context_17.md",
-        "target": "context_32.md",
-        "weight": 0.111,
-        "shared": [
-          "context",
-          "foundation"
         ]
       },
       {
@@ -2669,15 +2637,6 @@
         ]
       },
       {
-        "source": "context_26.md",
-        "target": "context_32.md",
-        "weight": 0.111,
-        "shared": [
-          "context",
-          "avoid"
-        ]
-      },
-      {
         "source": "context_27.md",
         "target": "context_28.md",
         "weight": 0.176,
@@ -2717,16 +2676,6 @@
       },
       {
         "source": "context_28.md",
-        "target": "context_32.md",
-        "weight": 0.176,
-        "shared": [
-          "context",
-          "foundation",
-          "neural"
-        ]
-      },
-      {
-        "source": "context_28.md",
         "target": "context_34.md",
         "weight": 0.111,
         "shared": [
@@ -2754,15 +2703,6 @@
       },
       {
         "source": "context_30.md",
-        "target": "context_32.md",
-        "weight": 0.111,
-        "shared": [
-          "context",
-          "foundation"
-        ]
-      },
-      {
-        "source": "context_30.md",
         "target": "context_36.md",
         "weight": 0.111,
         "shared": [
@@ -2781,6 +2721,16 @@
       },
       {
         "source": "context_31.md",
+        "target": "context_32.md",
+        "weight": 0.78,
+        "shared": [
+          "memory-reference",
+          "explicit-reference",
+          "api"
+        ]
+      },
+      {
+        "source": "context_31.md",
         "target": "context_33.md",
         "weight": 0.78,
         "shared": [
@@ -2791,10 +2741,27 @@
       },
       {
         "source": "context_31.md",
-        "target": "context_36.md",
+        "target": "context_34.md",
         "weight": 0.78,
         "shared": [
           "memory-reference",
+          "context"
+        ]
+      },
+      {
+        "source": "context_31.md",
+        "target": "context_35.md",
+        "weight": 0.78,
+        "shared": [
+          "memory-reference",
+          "context"
+        ]
+      },
+      {
+        "source": "context_31.md",
+        "target": "context_36.md",
+        "weight": 0.111,
+        "shared": [
           "api",
           "context"
         ]
@@ -2810,30 +2777,65 @@
         ]
       },
       {
-        "source": "context_32.md",
-        "target": "context_35.md",
-        "weight": 0.176,
+        "source": "context_31.md",
+        "target": "context_40.md",
+        "weight": 0.78,
         "shared": [
-          "area",
-          "context",
-          "organic"
+          "memory-reference",
+          "explicit-reference",
+          "back"
         ]
       },
       {
         "source": "context_32.md",
-        "target": "context_37.md",
+        "target": "context_33.md",
+        "weight": 0.78,
+        "shared": [
+          "memory-reference",
+          "admin",
+          "api"
+        ]
+      },
+      {
+        "source": "context_32.md",
+        "target": "context_34.md",
+        "weight": 0.78,
+        "shared": [
+          "memory-reference"
+        ]
+      },
+      {
+        "source": "context_32.md",
+        "target": "context_35.md",
+        "weight": 0.78,
+        "shared": [
+          "memory-reference"
+        ]
+      },
+      {
+        "source": "context_32.md",
+        "target": "context_36.md",
         "weight": 0.111,
         "shared": [
-          "area",
-          "context"
+          "admin",
+          "api"
+        ]
+      },
+      {
+        "source": "context_32.md",
+        "target": "context_40.md",
+        "weight": 0.78,
+        "shared": [
+          "memory-reference",
+          "explicit-reference",
+          "fix"
         ]
       },
       {
         "source": "context_33.md",
         "target": "context_36.md",
-        "weight": 0.78,
+        "weight": 0.25,
         "shared": [
-          "memory-reference",
           "api",
           "empresas",
           "admin",
@@ -2861,23 +2863,29 @@
       },
       {
         "source": "context_34.md",
-        "target": "context_37.md",
+        "target": "context_40.md",
         "weight": 0.78,
         "shared": [
-          "memory-reference",
-          "context"
+          "memory-reference"
         ]
       },
       {
         "source": "context_35.md",
         "target": "context_37.md",
-        "weight": 0.78,
+        "weight": 0.25,
         "shared": [
-          "memory-reference",
           "area",
           "graph",
           "context",
           "must"
+        ]
+      },
+      {
+        "source": "context_35.md",
+        "target": "context_40.md",
+        "weight": 0.78,
+        "shared": [
+          "memory-reference"
         ]
       },
       {
@@ -2887,6 +2895,14 @@
         "shared": [
           "rotas",
           "api"
+        ]
+      },
+      {
+        "source": "context_1.md",
+        "target": "context_32.md",
+        "weight": 0.92,
+        "shared": [
+          "foundation-anchor"
         ]
       },
       {
@@ -2904,10 +2920,18 @@
         "shared": [
           "foundation-anchor"
         ]
+      },
+      {
+        "source": "context_1.md",
+        "target": "context_40.md",
+        "weight": 0.92,
+        "shared": [
+          "foundation-anchor"
+        ]
       }
     ]
   },
-  "updatedAt": "2026-05-10T01:39:08.535Z",
-  "signature": "58a8ddfe9e596b9ff205e6e7b609c8e3dd160b48845ecc0e1099fdd7f7ba3810",
-  "contextCount": 39
+  "updatedAt": "2026-05-10T02:40:27.324Z",
+  "signature": "4d42e62da42cf4e0c91b5ade484fad216440933f02400aed8052c7e99e2e1712",
+  "contextCount": 40
 }

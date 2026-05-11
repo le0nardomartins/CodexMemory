@@ -1,0 +1,31 @@
+{
+  "_doc": "CodexMemory — Configuração visual e de simulação da rede neural. Edite aqui para ajustar o comportamento sem mexer no código.",
+
+  "neuron": {
+    "_doc_foundationScale": "Multiplicador de tamanho do neurônio fundamento (context_1.md) em relação ao raio base. Valor padrão: 5",
+    "foundationScale": 5,
+
+    "_doc_normalScale": "Multiplicador de tamanho dos neurônios normais em relação ao raio base. Valor padrão: 2.82",
+    "normalScale": 2.82,
+
+    "_doc_minSpacing": "Distância mínima (world units) entre neurônios dentro de uma zona de área — Poisson-disk sampling. Valor padrão: 74",
+    "minSpacing": 74,
+
+    "_doc_maxSpacing": "Distância máxima (world units) entre neurônios dentro de uma zona de área. Valor padrão: 190",
+    "maxSpacing": 190
+  },
+
+  "idle": {
+    "_doc_enabled": "Liga (true) ou desliga (false) a animação idle dos neurônios. O fundamento nunca oscila independente deste valor.",
+    "enabled": true,
+
+    "_doc_tickSpeed": "Incremento de flowTick por frame — controla velocidade geral de todas as animações (sinapses, idle, fluxo). Valor padrão: 0.018",
+    "tickSpeed": 0.018,
+
+    "_doc_freqVariation": "Variação máxima de frequência de oscilação entre neurônios. 0 = todos oscilam na mesma velocidade; 1 = variação de 100%. Valor padrão: 0.6",
+    "freqVariation": 0.6,
+
+    "_doc_yRatio": "Razão entre a frequência vertical e horizontal do idle. Valores diferentes de 1.0 produzem trajetórias elípticas (figura de Lissajous). Valor padrão: 0.71",
+    "yRatio": 0.71
+  }
+}
