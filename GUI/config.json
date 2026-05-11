@@ -1,36 +1,36 @@
 {
-  "_doc": "CodexMemory — Configuração visual e de simulação da rede neural. Edite aqui para ajustar o comportamento sem mexer no código.",
+  "_doc": "CodexMemory — Visual and simulation config for the neural graph. Edit here to adjust behavior without touching code.",
 
   "neuron": {
-    "_doc_foundationScale": "Multiplicador de tamanho do neurônio fundamento (context_1.md) em relação ao raio base. Valor padrão: 5",
+    "_doc_foundationScale": "Size multiplier for the foundation neuron (context_1.md) relative to the base radius. Default: 5",
     "foundationScale": 5,
 
-    "_doc_normalScale": "Multiplicador de tamanho dos neurônios normais em relação ao raio base. Valor padrão: 2.82",
+    "_doc_normalScale": "Size multiplier for regular neurons relative to the base radius. Default: 2.82",
     "normalScale": 2.82,
 
-    "_doc_minSpacing": "Distância mínima (world units) entre neurônios dentro de uma zona de área — Poisson-disk sampling. Valor padrão: 200",
+    "_doc_minSpacing": "Minimum distance (world units) between neurons inside an area zone — Poisson-disk sampling. Default: 200",
     "minSpacing": 200,
 
-    "_doc_maxSpacing": "Distância máxima (world units) entre neurônios dentro de uma zona de área. Valor padrão: 600",
+    "_doc_maxSpacing": "Maximum distance (world units) between neurons inside an area zone. Default: 600",
     "maxSpacing": 600
   },
 
   "area": {
-    "_doc_radiusScale": "Multiplicador do raio base de cada zona de área cerebral. 2.6 = tamanho padrão; valores maiores expandem todas as zonas uniformemente. Valor padrão: 2.6",
+    "_doc_radiusScale": "Multiplier for the base radius of each brain area zone. Higher values expand all zones uniformly. Default: 2.6",
     "radiusScale": 2.6
   },
 
   "idle": {
-    "_doc_enabled": "Liga (true) ou desliga (false) a animação idle dos neurônios. O fundamento nunca oscila independente deste valor.",
+    "_doc_enabled": "Enable (true) or disable (false) idle animation for neurons. The foundation neuron never oscillates regardless of this value.",
     "enabled": true,
 
-    "_doc_tickSpeed": "Incremento de flowTick por frame — controla velocidade geral de todas as animações (sinapses, idle, fluxo). Valor padrão: 0.02",
+    "_doc_tickSpeed": "flowTick increment per frame — controls overall speed of all animations (synapses, idle, flow). Default: 0.03",
     "tickSpeed": 0.03,
 
-    "_doc_freqVariation": "Variação máxima de frequência de oscilação entre neurônios. 0 = todos oscilam na mesma velocidade; 1 = variação de 100%. Valor padrão: 1.0",
+    "_doc_freqVariation": "Maximum oscillation frequency variation between neurons. 0 = all oscillate at the same speed; 1 = 100% variation. Default: 1.0",
     "freqVariation": 1.0,
 
-    "_doc_yRatio": "Razão entre a frequência vertical e horizontal do idle. Valores diferentes de 1.0 produzem trajetórias elípticas (figura de Lissajous). Valor padrão: 1.0",
+    "_doc_yRatio": "Ratio between vertical and horizontal idle frequency. Values other than 1.0 produce elliptical trajectories (Lissajous figure). Default: 1.0",
     "yRatio": 1.0
   }
 }
