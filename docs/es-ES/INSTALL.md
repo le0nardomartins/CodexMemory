@@ -1,4 +1,4 @@
-# Guía de Instalación — Codex Memory
+# Guía de Instalación
 
 <p align="right">
   🌐

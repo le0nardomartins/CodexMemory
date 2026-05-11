@@ -1,4 +1,4 @@
-# Technical Documentation — Codex Memory
+# Technical Documentation
 
 <p align="right">
   🌐
