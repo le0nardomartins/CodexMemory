@@ -9,7 +9,7 @@ Open source memory orchestration for context driven coding workflows.
 </p>
 
 <p align="center">
-  <a href="LICENSE"><img src="https://img.shields.io/badge/license-Source%20Available-orange" alt="License: Source Available" /></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-green" alt="License: MIT" /></a>
   <img src="https://img.shields.io/badge/node-%3E%3D18-brightgreen" alt="Node.js 18+" />
   <img src="https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%7C%20Mac-blue" alt="Platform" />
   <img src="https://img.shields.io/badge/engine-Ollama%20%7C%20Algorithm-purple" alt="Engine" />
@@ -186,7 +186,7 @@ The Electron desktop mode and the `.bat`/`.ps1` autostart scripts are Windows-on
 
 ## License
 
-Source available — free for non-commercial use with attribution. Commercial use requires prior written permission from the author. See [LICENSE](LICENSE) for full terms.
+MIT — free to use, modify, and distribute. See [LICENSE](LICENSE) for full terms.
 
 ---
 
