@@ -171,9 +171,9 @@ npm run test:memory
 
 ## Platform Support
 
-**Windows** — fully supported via `npm start`, `setup_codex_memory.bat`, and the PowerShell scripts in `scripts/`.
+**Windows**: fully supported via `npm start`, `setup_codex_memory.bat`, and the PowerShell scripts in `scripts/`.
 
-**Linux / Mac** — run the server directly with Node.js:
+**Linux / Mac**: run the server directly with Node.js:
 
 ```bash
 node server.js --mode gui
@@ -186,7 +186,7 @@ The Electron desktop mode and the `.bat`/`.ps1` autostart scripts are Windows-on
 
 ## License
 
-MIT — free to use, modify, and distribute. See [LICENSE](LICENSE) for full terms.
+MIT - free to use, modify, and distribute. See [LICENSE](LICENSE) for full terms.
 
 ---
 
